@@ -1,4 +1,4 @@
-// src/components/restaurantsData.js
+
 const restaurants = [
     {
       name: "Le Burger Gourmet",

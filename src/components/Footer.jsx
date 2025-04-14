@@ -6,6 +6,7 @@ import TwitterIcon from '@mui/icons-material/Twitter';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
+import { Link as RouterLink } from "react-router-dom";
 
 function Footer() {
   return (
@@ -47,25 +48,30 @@ function Footer() {
             </Typography>
             <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Link href="#" underline="none" color="inherit" variant="body2"
-              sx={{ '&:hover': { textDecoration: 'none', color: '#f0f0f0' } }}>
+              sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Accueil
+
               </Link>
-              <Link href="#" underline="none" color="inherit" variant="body2"
-                sx={{ '&:hover': { textDecoration: 'none', color: '#f0f0f0' } }}>
+              <Link href="/restaurants" underline="none" color="inherit" variant="body2"
+                sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Restaurants
               </Link>
-              <Link href="#" underline="none" color="inherit" variant="body2"
-                sx={{ '&:hover': { textDecoration: 'none', color: '#f0f0f0' } }}>
+             
+              <Link href="/RestaurantsDetail" underline="none" color="inherit" variant="body2"
+                sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Plats
               </Link>
               <Link href="#" underline="none" color="inherit" variant="body2"
-                sx={{ '&:hover': { textDecoration: 'none', color: '#f0f0f0' } }}>
+                sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Inscription
               </Link>
-              <Link href="#" underline="none" color="inherit" variant="body2"
-                sx={{ '&:hover': { textDecoration: 'none', color: '#f0f0f0' } }}>
-                Connexion
-              </Link>
+              <RouterLink to='/Profil' style={{ textDecoration: 'none' }}>
+                <Link 
+                    underline="none"  color="white" variant="body2" 
+                    sx={{ '&:hover': { textDecoration: 'underline'} }}>
+                  Connexion
+                </Link>
+              </RouterLink>
             </Box>
           </Grid>
 

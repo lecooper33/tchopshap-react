@@ -7,12 +7,8 @@ const CategoryList = ({ categories }) => {
     <Container sx={{ py: 4 }}>
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
+          display: "flex",  justifyContent: "space-between",
+          alignItems: "center",mb: 3,}}>
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           Catégories
         </Typography>
@@ -20,12 +16,8 @@ const CategoryList = ({ categories }) => {
           href="#"
           sx={{
             textDecoration: "none",
-            color: "orange",
-            fontWeight: "bold",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
+            color: "orange", fontWeight: "bold",
+            display: "flex", alignItems: "center",}}>
           Voir tout <RiArrowRightSLine />
         </Link>
       </Box>
@@ -37,16 +29,11 @@ const CategoryList = ({ categories }) => {
               sx={{
                 borderRadius: 2,
                 boxShadow: 3,
-                height: "100%",
-                cursor: "pointer",
-              }}
-            >
+                height: "100%",cursor: "pointer",}}>
               <CardMedia
                 component="img"
                 sx={{ height: "27.8vh", objectFit: "cover" }}
-                image={category.image}
-                alt={category.name}
-              />
+                image={category.image}  alt={category.name}/>
               <CardContent sx={{ textAlign: "center" }}>
                 <Typography variant="body1" sx={{ fontWeight: "bold" }}>
                   {category.name}
