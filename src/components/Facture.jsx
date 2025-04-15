@@ -97,14 +97,14 @@ export default function Facture(){
     </Box>
     
     
-    <Button 
+  <Link href='/Confirmation'>  <Button 
       variant="contained" 
       sx={{ backgroundColor: 'orange',  color: 'white', 
         width: '97%', ml: 2, 
         mb: 2,  mt: 2,
         '&:hover': { backgroundColor: 'darkorange'  } }} >
       Confirmer la commande
-    </Button>
+    </Button></Link>
   </Paper>
 </Box>
             <Box sx={{width:'95%'}} marginBottom={5} marginTop={5}>

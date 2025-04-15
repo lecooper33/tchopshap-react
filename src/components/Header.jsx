@@ -32,11 +32,11 @@ const Header = () => {
             sx={{ "&:hover": { textDecoration: "underline" }, }} >
             Accueil
           </Link>
-          <Link  href="#"  underline="none"  color="inherit"
+          <Link  href="/restaurants"  underline="none"  color="inherit"
             sx={{ "&:hover": { textDecoration: "underline" },}} >
             Restaurants
           </Link>
-          <Link  href="#" underline="none"  color="inherit"
+          <Link  href="/RestaurantsDetail" underline="none"  color="inherit"
             sx={{  "&:hover": { textDecoration: "underline" }, }} >
             Plats
           </Link>

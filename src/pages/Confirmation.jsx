@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Paper, Button } from "@mui/material";
+import { Box, Typography, Paper, Button, Link } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -63,7 +63,7 @@ export default function Confirm() {
             </Box>
           </Box>
 
-          <Button
+        <Link href='/'> <Button
             fullWidth
             variant="contained"
             sx={{
@@ -72,7 +72,7 @@ export default function Confirm() {
               textTransform: "none",
               marginBottom: "16px",}}>
             Retour à l'accueil
-          </Button>
+          </Button></Link> 
 
           <Button
             fullWidth

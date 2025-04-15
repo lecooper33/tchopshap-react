@@ -73,7 +73,7 @@ export default function Profil(){
             sx={{ mt: 1 }}
           />
 
-          <Button
+        <Link href='/Paiement' >  <Button
             variant="contained"
             fullWidth
             sx={{ mt: 2,
@@ -81,7 +81,7 @@ export default function Profil(){
               ":hover": { backgroundColor: "#e65c00" }, fontWeight: "bold",
               textTransform: "none",}}>
             Se connecter
-          </Button>
+          </Button> </Link>
 
           <Typography variant="body2" textAlign="center" mt={2}>
             Vous n’avez pas de compte ?{" "}

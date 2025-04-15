@@ -84,7 +84,7 @@ export default function Panier() {
             <Typography fontWeight="bold" translate="no">{formatPrix(total)}</Typography>
           </Box>
 
-          <Link href='/Facture'> <Button fullWidth variant="contained" 
+          <Link href='/Profil'> <Button fullWidth variant="contained" 
             sx={{ 
               backgroundColor: "orange", 
               color: "white", "&:hover": { backgroundColor: "darkorange" }}}
