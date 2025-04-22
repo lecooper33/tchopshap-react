@@ -1,99 +1,114 @@
 import React, { useState } from "react";
-
-import { Container, Typography, Box, Paper, Button, IconButton, Link} from "@mui/material";
+import {
+  Container, Typography, Box, Paper, Button, IconButton, Grid
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useLocation, Link } from "react-router-dom";
 
 export default function Panier() {
+  const location = useLocation();
+  const plat = location.state?.plat;
+
   const [quantite, setQuantite] = useState(1);
-  const prixPlat = 12.9;
   const fraisLivraison = 2.99;
+
+  if (!plat) {
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h6">Aucun plat sélectionné.</Typography>
+      </Container>
+    );
+  }
+
+  const formatPrix = (prix) => prix.toLocaleString('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 
   const augmenter = () => setQuantite(q => q + 1);
   const diminuer = () => setQuantite(q => Math.max(1, q - 1));
   const reset = () => setQuantite(1);
 
-  
-  const formatPrix = (prix) => {
-    return prix.toLocaleString('fr-FR', { 
-      style: 'currency', 
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
-  const sousTotal = quantite * prixPlat;
+  const sousTotal = plat.prix * quantite;
   const total = sousTotal + fraisLivraison;
 
   return (
-    <div>
-      <Container sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h5" fontWeight="bold" mb={2} translate="no">
-          Votre panier
-        </Typography>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h5" fontWeight="bold" mb={3}>
+        Votre panier
+      </Typography>
 
-        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
-          <Typography fontWeight="bold" mb={1} translate="no">
-            Le Burger Gourmet
-          </Typography>
-
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Box 
-              component="img" 
-              src="/Img/Image (1).png" 
-              alt="burger" 
-              sx={{ width: 64, height: 64, borderRadius: 1 }} 
+      {/* Section du plat */}
+      <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={3}>
+            <Box
+              component="img"
+              src={plat.image}
+              alt={plat.nom}
+              sx={{ width: "100%", height: "auto", borderRadius: 1, objectFit: "cover" }}
             />
+          </Grid>
 
-            <Box>
-              <Typography translate="no">Burger Classique</Typography>
-              <Typography translate="no">{formatPrix(prixPlat)}</Typography>
-            </Box>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="h6">{plat.nom}</Typography>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              {plat.description}
+            </Typography>
+            <Typography fontWeight="bold">{formatPrix(plat.prix)}</Typography>
+          </Grid>
 
-            <Box sx={{ display: "flex", alignItems: "center", ml: "auto" }}>
-              <Button onClick={diminuer} translate="no">-</Button>
-              <Typography sx={{ mx: 1 }} translate="no">{quantite}</Typography>
-              <Button onClick={augmenter} translate="no">+</Button>
-              <IconButton onClick={reset} color="error" aria-label="Supprimer">
+          <Grid item xs={12} sm={3}>
+            <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+              <Button variant="outlined" onClick={diminuer}>-</Button>
+              <Typography>{quantite}</Typography>
+              <Button variant="outlined" onClick={augmenter}>+</Button>
+              <IconButton onClick={reset} color="error">
                 <DeleteIcon />
               </IconButton>
             </Box>
-          </Box>
-        </Paper>
+          </Grid>
+        </Grid>
+      </Paper>
 
-        <Paper elevation={3} sx={{ p: 2 }}>
-          <Typography fontWeight="bold" mb={2} translate="no">
-            Récapitulatif
-          </Typography>
+      {/* Récapitulatif */}
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Typography variant="h6" fontWeight="bold" gutterBottom>
+          Récapitulatif
+        </Typography>
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-            <Typography translate="no">Sous-total</Typography>
-            <Typography translate="no">{formatPrix(sousTotal)}</Typography>
-          </Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Sous-total</Typography>
+          <Typography>{formatPrix(sousTotal)}</Typography>
+        </Box>
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-            <Typography translate="no">Frais de livraison</Typography>
-            <Typography translate="no">{formatPrix(fraisLivraison)}</Typography>
-          </Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Frais de livraison</Typography>
+          <Typography>{formatPrix(fraisLivraison)}</Typography>
+        </Box>
 
-          <Box sx={{ 
-            display: "flex", justifyContent: "space-between", 
-            mb: 2, mt: 2, pt: 2,
-            borderTop: "1px solid rgba(0,0,0,0.12)"}}>
-            <Typography fontWeight="bold" translate="no">Total</Typography>
-            <Typography fontWeight="bold" translate="no">{formatPrix(total)}</Typography>
-          </Box>
+        <Box display="flex" justifyContent="space-between" mt={2} pt={2} borderTop="1px solid #ddd">
+          <Typography fontWeight="bold">Total</Typography>
+          <Typography fontWeight="bold">{formatPrix(total)}</Typography>
+        </Box>
 
-          <Link href='/Profil'> <Button fullWidth variant="contained" 
-            sx={{ 
-              backgroundColor: "orange", 
-              color: "white", "&:hover": { backgroundColor: "darkorange" }}}
-            translate="no">
+        <Link to="/Profil" style={{ textDecoration: "none" }}>
+          <Button
+            fullWidth
+            variant="contained"
+            sx={{
+              mt: 3,
+              backgroundColor: "orange",
+              color: "white",
+              "&:hover": { backgroundColor: "darkorange" }
+            }}
+          >
             Commander
           </Button>
-          </Link>
-        </Paper>
-      </Container>
-    </div>
+        </Link>
+      </Paper>
+    </Container>
   );
 }

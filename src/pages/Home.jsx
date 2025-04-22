@@ -6,8 +6,6 @@ import Download from "../components/Download.jsx";
 import HowItWorks from "../components/HowItWorks.jsx";
 import Footer from "../components/Footer.jsx";
 
-
-// les composant reutilisable
 import categories from "../components/category.js";
 import restaurants from "../components/restaurantsData";
 import "../App.css";

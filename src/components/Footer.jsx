@@ -10,8 +10,8 @@ import { Link as RouterLink } from "react-router-dom";
 
 function Footer() {
   return (
-    <Box sx={{ backgroundColor: '#1E252F', color: '#fff', py: 4 , width:'100%' }}>
-      <Container>
+    <Box sx={{ backgroundColor: '#1E252F', color: '#fff', py: 4 , width:'100%',marginTop:'5%' }}>
+      <Container >
         <Grid container spacing={4}>
         
           <Grid item xs={12} md={4}>
@@ -42,7 +42,8 @@ function Footer() {
             </Box>
 
           </Grid>
-          <Grid item xs={12} md={4} sx={{width:'23%'}}>
+          
+          <Grid item xs={12} md={4} sx={{width:'25%'}}>
             <Typography variant="h6" fontWeight="bold">
               Liens Rapides
             </Typography>
@@ -75,13 +76,13 @@ function Footer() {
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={4} width={'30%'}>
+          <Grid item xs={12} md={4} width={'28%'}>
             <Typography variant="h6" fontWeight="bold">
               Contact
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
               <LocationOnIcon sx={{ color: 'orange', mr: 1 }} />
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{width:'100%'}}>
                 123 Avenue de la République,<br />
                 75011 Paris
               </Typography>
@@ -95,9 +96,8 @@ function Footer() {
               <Typography variant="body2">contact@tchopshap.fr</Typography>
             </Box>
           </Grid>
+         
         </Grid>
-
- 
         <Box sx={{ borderTop: '1px solid #444', mt: 4, pt: 2, textAlign: 'center' }}>
           <Typography variant="body2">© 2025 TchôpShap. Tous droits réservés.</Typography>
         </Box>

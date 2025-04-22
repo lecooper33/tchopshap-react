@@ -5,33 +5,48 @@ import { FaApple, FaGooglePlay } from "react-icons/fa";
 function Download() {
   return (
     <Box
-      sx={{ width: "95%",height: "100vh",display: "flex", marginLeft:'2.5%', py:5}}
+      sx={{
+        width: "95%",
+        minHeight: "90vh",
+        display: "flex", justifyContent:'center',
+        margin:'auto',
+        marginTop:'5%' ,
+        flexDirection: { xs: "column", md: "row" },
+      }}
     >
       <Box
         sx={{
-          width: "50%",
+          
+          width: { xs: "95%", md: "50%" },
           backgroundColor: "#FFF7ED",
-          padding: "60px 40px",
+          padding: { xs: "40px 11px", md: "60px 40px" },
           display: "flex",
           flexDirection: "column",
+          justifyContent: "center",
         }}
       >
         <Typography
           variant="h5"
-          fontWeight="bold"sx={{ mb: 2, lineHeight: 1.3, width:'50%' }}>
+          fontWeight="bold"
+          sx={{ mb: 2, lineHeight: 1.3, width: { xs: "95%", sm: "80%", md: "50%" } }}
+        >
           Téléchargez notre application
         </Typography>
 
         <Typography
           fontSize={14}
           color="text.secondary"
-          sx={{ lineHeight: 1.8, mb: 3, maxWidth: "50%" }}
+          sx={{
+            lineHeight: 1.8,
+            mb: 3,
+            maxWidth: { xs: "100%", sm: "80%", md: "50%" },
+          }}
         >
           Commandez plus rapidement, suivez vos livraisons en temps réel et
           bénéficiez d'offres exclusives.
         </Typography>
 
-        <Box sx={{ display: "flex", gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <Button
             sx={{
               backgroundColor: "black",
@@ -63,7 +78,11 @@ function Download() {
               py: 1.5,
               display: "flex",
               alignItems: "center",
-              gap: 1,textTransform: "none",'&:hover': { backgroundColor: "#222" },}}>
+              gap: 1,
+              textTransform: "none",
+              '&:hover': { backgroundColor: "#222" },
+            }}
+          >
             <FaGooglePlay size={24} />
             <Box sx={{ textAlign: "left" }}>
               <Typography sx={{ fontSize: 10 }}>Télécharger sur</Typography>
@@ -80,11 +99,12 @@ function Download() {
         src="/Img/Container.png"
         alt="Tacos"
         sx={{
-          width: "50%",
-          height: "100%",
+          width:  { xs: "100%", md: "50%" },
+          height: { xs: "300px", sm: "400px", md: "100%" },
           objectFit: "cover",
-          borderTopRightRadius:'5%',
-          borderBottomRightRadius:'5%'
+          borderTopRightRadius: { xs: 0, md: "5%" },
+          borderBottomRightRadius: { xs: 0, md: "5%" },
+          borderBottomLeftRadius: { xs: "0", md: 0 }, 
         }}
       />
     </Box>
