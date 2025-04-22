@@ -65,7 +65,7 @@ export default function Panier() {
               <Button variant="outlined" onClick={diminuer}>-</Button>
               <Typography>{quantite}</Typography>
               <Button variant="outlined" onClick={augmenter}>+</Button>
-              <IconButton onClick={reset} color="error">
+              <IconButton onClick={reset} sx={{color:"#F97316"}}>
                 <DeleteIcon />
               </IconButton>
             </Box>

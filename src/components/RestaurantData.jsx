@@ -150,7 +150,7 @@ const Details = () => {
 
       {/* Affichage des plats */}
       <Box sx={{ p: { xs: 2, md: 3 } }}>
-        <Grid container spacing={3}>
+        <Grid container spacing={4}>
           {platsFiltres.map((plat, index) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
               <Card
@@ -162,8 +162,9 @@ const Details = () => {
               >
                 {/* Image du plat */}
                 <CardMedia component="img" image={plat.image} alt={plat.nom}
-                  sx={{ width: "100%", height: { xs: 180, sm: 220, md: 240 }, objectFit: "cover",
+                  sx={{ width: "100%",height: { xs: 180, sm: 220, md: 260 }, objectFit: "cover",
                     borderTopLeftRadius: 12, borderTopRightRadius: 12,}}/>
+                    
 
                 {/* Informations du plat */}
                 <CardContent>
