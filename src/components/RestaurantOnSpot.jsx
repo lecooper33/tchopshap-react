@@ -29,7 +29,7 @@ const RestaurantOnSpot = ({ restaurants }) => {
         </Box>
       )}
 
-      <Grid container spacing={4}>
+      <Grid container spacing={5}>
         {restaurants.map((restaurant, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={index}>
             <Card
@@ -38,7 +38,7 @@ const RestaurantOnSpot = ({ restaurants }) => {
               <CardMedia
                 component="img"
                 sx={{
-                  height: { xs: "180px", sm: "200px", md: "42.3vh" },
+                  height: { xs: "180px", sm: "200px", md: "41vh" },
                   objectFit: "cover",
                 }} image={restaurant.image} alt={restaurant.name}/>
               <CardContent sx={{ flexGrow: 1 }}>

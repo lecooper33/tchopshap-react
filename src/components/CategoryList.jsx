@@ -64,7 +64,7 @@ const CategoryList = ({ categories }) => {
               <CardMedia
                 component="img"
                 sx={{
-                  height: { xs: "180px", sm: "200px", md: "27.8vh" },
+                  height: { xs: "180px", sm: "200px", md: "27vh" },
                   objectFit: "cover",
                 }}
                 image={category.image}
