@@ -10,7 +10,7 @@ import {
   MenuItem,
   Button,
   Paper,
-  CircularProgress,
+  Skeleton,
   Grid,
   Card,
   CardMedia,
@@ -148,9 +148,33 @@ const Resto = () => {
         {/* Affichage des restaurants */}
         <Box mt={4}>
           {loading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
-              <CircularProgress sx={{ color: "#f97316" }} />
-            </Box>
+            <Grid
+              container
+              spacing={3}
+              display="grid"
+              gridTemplateColumns={{
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "1fr 1fr",
+              }}
+            >
+              {Array(4).fill(null).map((_, index) => (
+                <Grid item key={index}>
+                  <Card sx={{ height: "100%", borderRadius: 3 }}>
+                    <Skeleton
+                      variant="rectangular"
+                      height={180}
+                      sx={{ borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                    />
+                    <CardContent>
+                      <Skeleton variant="text" height={30} width="80%" />
+                      <Skeleton variant="text" height={20} width="60%" />
+                      <Skeleton variant="text" height={20} width="50%" sx={{ mt: 1 }} />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
           ) : filteredRestaurants.length > 0 ? (
             <Grid
               container
