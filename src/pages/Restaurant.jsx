@@ -1,11 +1,6 @@
-// Importation des modules React et composants nécessaires
-import React, { useState } from "react";
-import RestaurantOnSpot from "../components/RestaurantOnSpot.jsx";
-import restaurants from "../components/restaurantsData.js";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-
-// Composants de l'interface (MUI)
 import {
   Box,
   Typography,
@@ -15,9 +10,14 @@ import {
   MenuItem,
   Button,
   Paper,
+  CircularProgress,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
 } from "@mui/material";
 
-// Liste des catégories de restaurants
+// Liste des catégories avec leurs IDs
 const categories = [
   "Tous",
   "Burgers",
@@ -28,64 +28,86 @@ const categories = [
   "Desserts",
 ];
 
+// Fonction pour traduire idCategorie en nom
+const getCategorieNom = (id) => {
+  const map = {
+    1: "Burgers",
+    2: "Pizza",
+    3: "Sushi",
+    4: "Cuisine Africaine",
+    5: "Cuisine Française",
+    6: "Desserts",
+  };
+  return map[id] || "Inconnue";
+};
+
 const Resto = () => {
-  // États pour la recherche, la catégorie sélectionnée, le tri et le bouton actif
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Toutes les catégories");
-  const [sortBy, setSortBy] = useState("Popularité");
   const [activeCategory, setActiveCategory] = useState("Tous");
+  const [sortBy, setSortBy] = useState("Popularité");
+  const [restaurants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchRestaurants = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("https://tchopshap.onrender.com/restaurant");
+      const data = await response.json();
+      setRestaurants(data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des restaurants:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
+
+  const filteredRestaurants = restaurants
+    .filter((restaurant) => {
+      const matchSearch = restaurant.nom.toLowerCase().includes(search.toLowerCase());
+      const matchCategory =
+        activeCategory === "Tous" ||
+        getCategorieNom(restaurant.idCategorie) === activeCategory;
+      return matchSearch && matchCategory;
+    })
+    .sort((a, b) => {
+      if (sortBy === "Note") return b.rating - a.rating;
+      if (sortBy === "Prix") return a.price - b.price;
+      return b.popularity - a.popularity;
+    });
 
   return (
     <div>
-      {/* En-tête du site */}
       <Header />
-
-      {/* Contenu principal */}
       <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: "#f9fafb" }}>
         <Typography variant="h5" fontWeight={600} mb={2}>
           Restaurants
         </Typography>
 
-        {/* Filtres de recherche */}
+        {/* Barre de filtres */}
         <Paper
           elevation={1}
           sx={{
             p: 2,
             display: "flex",
             flexDirection: { xs: "column", sm: "row" },
-            flexWrap: "wrap",
             gap: 2,
-            borderRadius: "12px",
+            flexWrap: "wrap",
+            borderRadius: 3,
           }}
         >
-          {/* Champ de recherche */}
           <TextField
             placeholder="Rechercher un restaurant..."
             variant="outlined"
             size="small"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ flex: 1, width: { xs: "100%", sm: "auto" } }}
+            sx={{ flex: 1, minWidth: 180 }}
           />
 
-          {/* Sélecteur de catégorie */}
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <Select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              displayEmpty
-              sx={{ borderRadius: "8px" }}
-            >
-              <MenuItem value="Toutes les catégories">Toutes les catégories</MenuItem>
-              {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
-                  {cat}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Sélecteur de tri */}
           <FormControl size="small" sx={{ minWidth: 140 }}>
             <Select
               value={sortBy}
@@ -100,7 +122,7 @@ const Resto = () => {
           </FormControl>
         </Paper>
 
-        {/* Boutons de catégories */}
+        {/* Boutons Catégories */}
         <Box mt={2} sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {categories.map((cat) => (
             <Button
@@ -122,16 +144,75 @@ const Resto = () => {
             </Button>
           ))}
         </Box>
+
+        {/* Affichage des restaurants */}
+        <Box mt={4}>
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+              <CircularProgress sx={{ color: "#f97316" }} />
+            </Box>
+          ) : filteredRestaurants.length > 0 ? (
+            <Grid
+              container
+              spacing={3}
+              display="grid"
+              gridTemplateColumns={{
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "1fr 1fr",
+              }}
+            >
+              {filteredRestaurants.map((resto) => (
+                <Grid item key={resto.idRestaurant}>
+                  <Card
+                    sx={{
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderRadius: 3,
+                      transition: "transform 0.2s",
+                      "&:hover": { transform: "scale(1.02)" },
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      image={resto.image || "/default-restaurant.jpg"}
+                      alt={resto.nom}
+                      sx={{
+                        height: 180,
+                        objectFit: "cover",
+                        borderTopLeftRadius: 12,
+                        borderTopRightRadius: 12,
+                      }}
+                    />
+                    <CardContent>
+                      <Typography variant="h6" fontWeight={600}>
+                        {resto.nom}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {resto.adresse}
+                      </Typography>
+                      <Typography mt={1} variant="body2" color="text.secondary">
+                        Catégorie : {getCategorieNom(resto.idCategorie)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Typography
+              sx={{ px: 2, py: 4, textAlign: "center" }}
+              color="text.secondary"
+            >
+              Aucun restaurant ne correspond à votre recherche.
+            </Typography>
+          )}
+        </Box>
       </Box>
-
-      {/* Liste des restaurants */}
-      <RestaurantOnSpot restaurants={restaurants} />
-
-      {/* Pied de page */}
       <Footer />
     </div>
   );
 };
 
 export default Resto;
-

@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import {
-  Container, Typography, Box, Paper, Button, IconButton, Grid
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Button,
+  IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useLocation, Link } from "react-router-dom";
@@ -10,7 +15,7 @@ export default function Panier() {
   const plat = location.state?.plat;
 
   const [quantite, setQuantite] = useState(1);
-  const fraisLivraison = 2.99;
+  const fraisLivraison = 1000; // En Franc CFA
 
   if (!plat) {
     return (
@@ -20,16 +25,20 @@ export default function Panier() {
     );
   }
 
-  const formatPrix = (prix) => prix.toLocaleString('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  const formatPrix = (prix) =>
+    prix.toLocaleString("fr-FR", {
+      style: "currency",
+      currency: "XOF",
+      minimumFractionDigits: 0,
+    });
 
-  const augmenter = () => setQuantite(q => q + 1);
-  const diminuer = () => setQuantite(q => Math.max(1, q - 1));
-  const reset = () => setQuantite(1);
+  const ajusterQuantite = (action) => {
+    setQuantite((prevQuantite) => {
+      if (action === "augmenter") return prevQuantite + 1;
+      if (action === "diminuer") return Math.max(1, prevQuantite - 1);
+      if (action === "reset") return 1;
+    });
+  };
 
   const sousTotal = plat.prix * quantite;
   const total = sousTotal + fraisLivraison;
@@ -40,40 +49,38 @@ export default function Panier() {
         Votre panier
       </Typography>
 
-      {/* Section du plat */}
+      <Box
+        component="img"
+        src={plat.image}
+        alt={plat.nom}
+        sx={{
+          width: "100%",
+          height: 300,
+          objectFit: "cover",
+          borderRadius: 2,
+          mb: 2,
+        }}
+      />
+
       <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={3}>
-            <Box
-              component="img"
-              src={plat.image}
-              alt={plat.nom}
-              sx={{ width: "100%", height: "auto", borderRadius: 1, objectFit: "cover" }}
-            />
-          </Grid>
+        <Typography variant="h6">{plat.nom}</Typography>
+        <Typography variant="body2" color="text.secondary" mb={1}>
+          {plat.description}
+        </Typography>
+        <Typography fontWeight="bold" sx={{ fontSize: "1.2rem", color: "#F97316" }}>
+          {formatPrix(plat.prix)} / unité
+        </Typography>
 
-          <Grid item xs={12} sm={6}>
-            <Typography variant="h6">{plat.nom}</Typography>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              {plat.description}
-            </Typography>
-            <Typography fontWeight="bold">{formatPrix(plat.prix)}</Typography>
-          </Grid>
-
-          <Grid item xs={12} sm={3}>
-            <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-              <Button variant="outlined" onClick={diminuer}>-</Button>
-              <Typography>{quantite}</Typography>
-              <Button variant="outlined" onClick={augmenter}>+</Button>
-              <IconButton onClick={reset} sx={{color:"#F97316"}}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </Grid>
-        </Grid>
+        <Box display="flex" alignItems="center" justifyContent="start" gap={2} mt={2}>
+          <Button variant="outlined" onClick={() => ajusterQuantite("diminuer")}>-</Button>
+          <Typography>{quantite}</Typography>
+          <Button variant="outlined" onClick={() => ajusterQuantite("augmenter")}>+</Button>
+          <IconButton onClick={() => ajusterQuantite("reset")} sx={{ color: "#F97316" }}>
+            <DeleteIcon />
+          </IconButton>
+        </Box>
       </Paper>
 
-      {/* Récapitulatif */}
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h6" fontWeight="bold" gutterBottom>
           Récapitulatif
@@ -89,20 +96,30 @@ export default function Panier() {
           <Typography>{formatPrix(fraisLivraison)}</Typography>
         </Box>
 
-        <Box display="flex" justifyContent="space-between" mt={2} pt={2} borderTop="1px solid #ddd">
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          mt={2}
+          pt={2}
+          borderTop="1px solid #ddd"
+        >
           <Typography fontWeight="bold">Total</Typography>
           <Typography fontWeight="bold">{formatPrix(total)}</Typography>
         </Box>
 
-        <Link to="/Profil" style={{ textDecoration: "none" }}>
+        <Link
+          to="/Paiement"
+          state={{ total, sousTotal, fraisLivraison, plat, quantite }}
+          style={{ textDecoration: "none" }}
+        >
           <Button
             fullWidth
             variant="contained"
             sx={{
               mt: 3,
-              backgroundColor: "orange",
+              backgroundColor: "#F97316",
               color: "white",
-              "&:hover": { backgroundColor: "darkorange" }
+              "&:hover": { backgroundColor: "#ea580c" },
             }}
           >
             Commander

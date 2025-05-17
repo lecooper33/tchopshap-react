@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -12,6 +12,19 @@ import SearchIcon from '@mui/icons-material/Search';
 function HeroSection() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const [address, setAddress] = useState('');
+
+  const handleSearchChange = (e) => {
+    setAddress(e.target.value);
+  };
+
+  const handleSearchClick = () => {
+    if (address.trim()) {
+      // Ajoutez ici votre logique de recherche
+      console.log(`Recherche d'adresse: ${address}`);
+    }
+  };
 
   return (
     <Box
@@ -78,14 +91,18 @@ function HeroSection() {
             placeholder="Entrez votre adresse de livraison"
             variant="outlined"
             fullWidth
+            value={address}
+            onChange={handleSearchChange}
             sx={{
               bgcolor: 'white',
               borderRadius: { xs: 2, sm: '4px 0 0 4px' },
               flexGrow: 1,
             }}
+            aria-label="Adresse de livraison"
           />
           <Button
             variant="contained"
+            onClick={handleSearchClick}
             sx={{
               bgcolor: '#D95316',
               height: 'auto',
@@ -94,6 +111,7 @@ function HeroSection() {
               px: 3,
               mt: { xs: 1, sm: 0 },
             }}
+            aria-label="Rechercher"
           >
             <SearchIcon sx={{ mr: 1 }} />
             Rechercher
@@ -107,10 +125,11 @@ function HeroSection() {
         src="/Vector.png"
         alt="vector"
         sx={{
-          width: '111%',
+          width: '100%',
           height: 'auto',
           position: 'absolute',
           bottom: 0,
+          left: 0,
         }}
       />
     </Box>
@@ -118,4 +137,3 @@ function HeroSection() {
 }
 
 export default HeroSection;
-

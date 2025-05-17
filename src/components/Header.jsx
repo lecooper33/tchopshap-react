@@ -11,8 +11,8 @@ import {
   List,
   ListItem,
   ListItemText,
-  useTheme,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
@@ -26,45 +26,20 @@ import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const theme = useTheme();
+
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTabletOrMore = useMediaQuery(theme.breakpoints.up("sm"));
   const isConfirmationPage = location.pathname === "/Confirmation";
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const toggleDrawer = () => setDrawerOpen(prev => !prev);
 
-  const toggleDrawer = () => {
-    setDrawerOpen(!drawerOpen);
-  };
-
-  const handleLogout = () => {
-    navigate("/");
-  };
-
-  const handleCartClick = () => {
-    navigate("/panier");
-  };
-
-  const iconStyle = {
-    color: "#FFA726",
-    mr: 2,
-  };
-
-  const menuItemStyle = {
-    px: 3,
-    py: 2,
-    "&:hover": {
-      backgroundColor: "rgba(0, 0, 0, 0.05)",
-    },
-  };
-
-  const menuTextStyle = {
-    sx: {
-      fontWeight: 400,
-      fontSize: "1rem",
-      color: "#000",
-    },
-  };
+  const navItems = [
+    { text: "Accueil", to: "/", icon: <HomeIcon sx={{ color: "orange", mr: 2 }} /> },
+    { text: "Restaurants", to: "/restaurants", icon: <RestaurantIcon sx={{ color: "orange", mr: 2 }} /> },
+    { text: "Plats", to: "/RestaurantsDetail", icon: <FastfoodIcon sx={{ color: "orange", mr: 2 }} /> },
+  ];
 
   return (
     <AppBar
@@ -78,41 +53,88 @@ const Header = () => {
         px: 2,
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: 64 }}>
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* Logo */}
         <Typography
           variant="h6"
-          sx={{ fontWeight: "bold", color: "orange", cursor: "pointer" }}
           onClick={() => navigate("/")}
+          sx={{
+            fontWeight: "bold",
+            color: "orange",
+            cursor: "pointer",
+            fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' }
+          }}
         >
           TchôpShap
         </Typography>
 
-        {/* Desktop navigation */}
-        {!isMobile && !isConfirmationPage && (
+        {/* Navigation (desktop/tablette) */}
+        {isTabletOrMore && (
           <Box sx={{ display: "flex", gap: 4 }}>
-            <Button href="/" color="inherit">Accueil</Button>
-            <Button href="/restaurants" color="inherit">Restaurants</Button>
-            <Button href="/RestaurantsDetail" color="inherit">Plats</Button>
+            {navItems.map(({ text, to }) => (
+              <Button
+                key={text}
+                component={RouterLink}
+                to={to}
+                color="inherit"
+                sx={{ textTransform: "none", fontWeight: 500 }}
+              >
+                {text}
+              </Button>
+            ))}
           </Box>
         )}
 
-        {/* Right actions */}
+        {/* Actions à droite */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {/* Connexion sur desktop uniquement */}
-          {!isMobile && !isConfirmationPage && (
-            <RouterLink to="/Profil" style={{ textDecoration: "none", color: "inherit" }}>
-              <Button color="inherit">Connexion</Button>
-            </RouterLink>
+          {isConfirmationPage ? (
+            <>
+              <Typography sx={{ fontWeight: 500, color: "#000" }}>
+                Jean Dupont
+              </Typography>
+              <Button
+                variant="outlined"
+                sx={{
+                  textTransform: "none",
+                  borderColor: "orange",
+                  color: "orange",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 165, 0, 0.1)",
+                    borderColor: "orange",
+                  },
+                }}
+              >
+                Déconnexion
+              </Button>
+            </>
+          ) : (
+            isTabletOrMore && (
+              <Button
+                component={RouterLink}
+                to="/Profil"
+                color="inherit"
+                startIcon={<PersonOutlineIcon />}
+                sx={{ textTransform: "none" }}
+              >
+                Connexion
+              </Button>
+            )
           )}
 
-          {/* Panier - toujours visible */}
-          <IconButton onClick={handleCartClick}>
+          {/* Panier */}
+          <IconButton onClick={() => navigate("/Cart")}>
             <Badge badgeContent={1} color="error">
-              <LuShoppingCart size={20} />
+              <LuShoppingCart size={22} />
             </Badge>
           </IconButton>
 
-          {/* Menu mobile uniquement */}
+          {/* Menu Hamburger Mobile */}
           {isMobile && (
             <IconButton onClick={toggleDrawer}>
               {drawerOpen ? <CloseIcon /> : <MenuIcon />}
@@ -122,42 +144,60 @@ const Header = () => {
       </Toolbar>
 
       {/* Drawer mobile */}
-      {!isConfirmationPage && (
-        <Drawer
-          anchor="right"
-          open={drawerOpen}
-          onClose={toggleDrawer}
-          PaperProps={{
-            sx: {
-              width: 260,
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              transition: "all 0.3s ease-in-out",
-              boxShadow: 5,
-            },
-          }}
-        >
-          <Box sx={{ mt: 4 }}>
-            <List>
-              <ListItem button onClick={toggleDrawer} component="a" href="/" sx={menuItemStyle}>
-                <HomeIcon sx={iconStyle} />
-                <ListItemText primary="Accueil" primaryTypographyProps={menuTextStyle} />
-              </ListItem>
-              <ListItem button onClick={toggleDrawer} component="a" href="/restaurants" sx={menuItemStyle}>
-                <RestaurantIcon sx={iconStyle} />
-                <ListItemText primary="Restaurants" primaryTypographyProps={menuTextStyle} />
-              </ListItem>
-              <ListItem button onClick={toggleDrawer} component="a" href="/RestaurantsDetail" sx={menuItemStyle}>
-                <FastfoodIcon sx={iconStyle} />
-                <ListItemText primary="Plats" primaryTypographyProps={menuTextStyle} />
-              </ListItem>
-              <ListItem button onClick={toggleDrawer} component={RouterLink} to="/Profil" sx={menuItemStyle}>
-                <PersonOutlineIcon sx={iconStyle} />
-                <ListItemText primary="Connexion" primaryTypographyProps={menuTextStyle} />
-              </ListItem>
-            </List>
-          </Box>
-        </Drawer>
-      )}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={toggleDrawer}
+        PaperProps={{
+          sx: {
+            width: "50%", // moitié de l'écran
+            backgroundColor: "rgba(255,255,255,0.98)",
+            pt: 2,
+          },
+        }}
+      >
+        <List>
+          {navItems.map(({ text, to, icon }) => (
+            <ListItem
+              button
+              key={text}
+              component={RouterLink}
+              to={to}
+              onClick={toggleDrawer}
+              sx={{ px: 3, py: 2 }}
+            >
+              {icon}
+              <ListItemText
+                primary={text}
+                primaryTypographyProps={{
+                  fontWeight: 400,
+                  fontSize: "1rem",
+                  color: "#000",
+                }}
+              />
+            </ListItem>
+          ))}
+          {!isConfirmationPage && (
+            <ListItem
+              button
+              component={RouterLink}
+              to="/Profil"
+              onClick={toggleDrawer}
+              sx={{ px: 3, py: 2 }}
+            >
+              <PersonOutlineIcon sx={{ color: "orange", mr: 2 }} />
+              <ListItemText
+                primary="Connexion"
+                primaryTypographyProps={{
+                  fontWeight: 400,
+                  fontSize: "1rem",
+                  color: "#000",
+                }}
+              />
+            </ListItem>
+          )}
+        </List>
+      </Drawer>
     </AppBar>
   );
 };

@@ -3,28 +3,40 @@ import { Typography, Box, Button } from "@mui/material";
 import { FaApple, FaGooglePlay } from "react-icons/fa";
 
 function Download() {
+  const buttonStyle = {
+    backgroundColor: "black",
+    color: "white",
+    borderRadius: 2,
+    px: 2,
+    py: 1.5,
+    display: "flex",
+    alignItems: "center",
+    gap: 1,
+    "&:hover": { backgroundColor: "#222" },
+  };
+
+  const boxStyle = {
+    width: { xs: "95%", md: "50%" },
+    backgroundColor: "#FFF7ED",
+    padding: { xs: "40px 11px", md: "60px 40px" },
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+  };
+
   return (
     <Box
       sx={{
         width: "95%",
         minHeight: "90vh",
-        display: "flex", justifyContent:'center',
-        margin:'auto',
-        marginTop:'5%' ,
+        display: "flex",
+        justifyContent: "center",
+        margin: "auto",
+        marginTop: "5%",
         flexDirection: { xs: "column", md: "row" },
       }}
     >
-      <Box
-        sx={{
-          
-          width: { xs: "95%", md: "50%" },
-          backgroundColor: "#FFF7ED",
-          padding: { xs: "40px 11px", md: "60px 40px" },
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-        }}
-      >
+      <Box sx={boxStyle}>
         <Typography
           variant="h5"
           fontWeight="bold"
@@ -47,48 +59,19 @@ function Download() {
         </Typography>
 
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-          <Button
-            sx={{
-              backgroundColor: "black",
-              color: "white",
-              borderRadius: 2,
-              px: 2,
-              py: 1.5,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              '&:hover': { backgroundColor: "#222" },
-            }}
-          >
+          <Button sx={buttonStyle}>
             <FaApple size={24} />
             <Box sx={{ textAlign: "left" }}>
               <Typography sx={{ fontSize: 10 }}>Télécharger sur</Typography>
-              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-                App Store
-              </Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>App Store</Typography>
             </Box>
           </Button>
 
-          <Button
-            sx={{
-              backgroundColor: "black",
-              color: "white",
-              borderRadius: 2,
-              px: 2,
-              py: 1.5,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              textTransform: "none",
-              '&:hover': { backgroundColor: "#222" },
-            }}
-          >
+          <Button sx={buttonStyle}>
             <FaGooglePlay size={24} />
             <Box sx={{ textAlign: "left" }}>
               <Typography sx={{ fontSize: 10 }}>Télécharger sur</Typography>
-              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-                Google Play
-              </Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>Google Play</Typography>
             </Box>
           </Button>
         </Box>
@@ -97,14 +80,14 @@ function Download() {
       <Box
         component="img"
         src="/Img/Container.png"
-        alt="Tacos"
+        alt="Illustration de tacos avec l'application"
         sx={{
-          width:  { xs: "100%", md: "50%" },
+          width: { xs: "100%", md: "50%" },
           height: { xs: "300px", sm: "400px", md: "100%" },
           objectFit: "cover",
           borderTopRightRadius: { xs: 0, md: "5%" },
           borderBottomRightRadius: { xs: 0, md: "5%" },
-          borderBottomLeftRadius: { xs: "0", md: 0 }, 
+          borderBottomLeftRadius: { xs: "0", md: 0 },
         }}
       />
     </Box>
@@ -112,3 +95,4 @@ function Download() {
 }
 
 export default Download;
+

@@ -1,6 +1,7 @@
 
 const restaurants = [
     {
+      id : 1,
       name: "Le Burger Gourmet",
       image: "/image restaurant/Image (1).png",
       rating: 4.7,
@@ -9,6 +10,7 @@ const restaurants = [
       description: "Les meilleurs burgers artisanaux de la ville avec des ingrédients frais et locaux.",
     },
     {
+      id : 2,
       name: "Pizza Napoli",
       image: "/image restaurant/Image (2).png",
       rating: 4.5,
@@ -17,6 +19,7 @@ const restaurants = [
       description: "Authentiques pizzas napolitaines cuites au feu de bois.",
     },
     {
+        id : 3,
         name: "Sushi Palace",
         image: "/image restaurant/Image (3).png",
         rating: 4.8,
@@ -25,6 +28,7 @@ const restaurants = [
         description: "Sushis et sashimis préparés par des chefs japonais expérimentés.",
       },
       {
+        id : 4,
         name: "Saveurs d'Afrique",
         image: "/image restaurant/Image (10).png",
         rating: 4.6,
@@ -33,6 +37,7 @@ const restaurants = [
         description: "Cuisine africaine authentique avec des saveurs riches et épicées.",
       },
       {
+        id : 5,
         name: "Le Bistrot Parisien",
         image: "/image restaurant/Image (11).png",
         rating: 4.9,
@@ -41,6 +46,7 @@ const restaurants = [
         description: "Cuisine française traditionnelle revisitée avec des produits de saison.",
       },
       {
+        id : 6,
         name: "Douceurs Sucrées",
         image: "/image restaurant/Image (12).png",
         rating: 4.7,
