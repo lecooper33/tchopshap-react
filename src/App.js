@@ -7,7 +7,7 @@ import Detail from "./pages/RestaurantDetail.jsx";
 import Panier from "./pages/Cart.jsx";
 import Paiement from "./pages/Paiement.jsx";
 import Confirmation from "./pages/Confirmation.jsx";
-
+import Login from "./pages/Login.jsx"
 function App() {
   return (
     <Router>
@@ -19,6 +19,8 @@ function App() {
         <Route path="/Cart" element={<Panier />} />
         <Route path="/Paiement" element={<Paiement />} />
         <Route path="/Confirmation" element={<Confirmation />} />
+        <Route path="/Login" element={<Login />} />
+      
       </Routes>
     </Router>
   );

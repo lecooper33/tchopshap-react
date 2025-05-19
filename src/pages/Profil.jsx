@@ -111,7 +111,7 @@ export default function Profil() {
 
             <Typography variant="body2" textAlign="center" mt={2}>
               Vous n’avez pas de compte ?{" "}
-              <Link href="#" underline="hover" color="orange">
+              <Link href="/Login" underline="hover" color="orange">
                 S’inscrire
               </Link>
             </Typography>

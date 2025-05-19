@@ -55,7 +55,7 @@ function Footer() {
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Plats
               </Link>
-              <Link href="#" underline="none" color="inherit" variant="body2"
+              <Link href="Login" underline="none" color="inherit" variant="body2"
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Inscription
               </Link>
