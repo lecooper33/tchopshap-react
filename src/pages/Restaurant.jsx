@@ -1,3 +1,4 @@
+// src/pages/Resto.jsx
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
@@ -16,67 +17,61 @@ import {
   CardMedia,
   CardContent,
 } from "@mui/material";
-
-// Liste des catégories avec leurs IDs
-const categories = [
-  "Tous",
-  "Burgers",
-  "Pizza",
-  "Sushi",
-  "Cuisine Africaine",
-  "Cuisine Française",
-  "Desserts",
-];
-
-// Fonction pour traduire idCategorie en nom
-const getCategorieNom = (id) => {
-  const map = {
-    1: "Burgers",
-    2: "Pizza",
-    3: "Sushi",
-    4: "Cuisine Africaine",
-    5: "Cuisine Française",
-    6: "Desserts",
-  };
-  return map[id] || "Inconnue";
-};
+import { Link } from "react-router-dom";
 
 const Resto = () => {
   const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState(["Tous"]);
+  const [catData, setCatData] = useState([]);
   const [activeCategory, setActiveCategory] = useState("Tous");
   const [sortBy, setSortBy] = useState("Popularité");
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRestaurants = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("https://tchopshap.onrender.com/restaurant");
-      const data = await response.json();
-      setRestaurants(data);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des restaurants:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Récupération dynamique des catégories
   useEffect(() => {
-    fetchRestaurants();
+    fetch("https://tchopshap.onrender.com/categorie")
+      .then((res) => res.json())
+      .then((data) => {
+        setCatData(data);
+        setCategories(["Tous", ...data.map((c) => c["categorie"])]);
+      })
+      .catch(console.error);
   }, []);
 
-  const filteredRestaurants = restaurants
-    .filter((restaurant) => {
-      const matchSearch = restaurant.nom.toLowerCase().includes(search.toLowerCase());
-      const matchCategory =
-        activeCategory === "Tous" ||
-        getCategorieNom(restaurant.idCategorie) === activeCategory;
-      return matchSearch && matchCategory;
+  // Récupération des restaurants
+  useEffect(() => {
+    const fetchR = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("https://tchopshap.onrender.com/restaurant");
+        const data = await res.json();
+        setRestaurants(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchR();
+  }, []);
+
+  const getCatNom = (id) => {
+    const cat = catData.find((c) => c.idCategorie === id);
+    return cat ? cat["catégorie"] : "Inconnue";
+  };
+
+  const filtered = restaurants
+    .filter((r) => {
+      const matchSearch = r.nom.toLowerCase().includes(search.toLowerCase());
+      const matchCat =
+        activeCategory === "Tous" || getCatNom(r.idCategorie) === activeCategory;
+      return matchSearch && matchCat;
     })
     .sort((a, b) => {
-      if (sortBy === "Note") return b.rating - a.rating;
-      if (sortBy === "Prix") return a.price - b.price;
-      return b.popularity - a.popularity;
+      if (sortBy === "Note") return (b.rating || 0) - (a.rating || 0);
+      if (sortBy === "Prix") return (a.price || 0) - (b.price || 0);
+      return (b.popularity || 0) - (a.popularity || 0);
     });
 
   return (
@@ -87,7 +82,6 @@ const Resto = () => {
           Restaurants
         </Typography>
 
-        {/* Barre de filtres */}
         <Paper
           elevation={1}
           sx={{
@@ -122,7 +116,6 @@ const Resto = () => {
           </FormControl>
         </Paper>
 
-        {/* Boutons Catégories */}
         <Box mt={2} sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {categories.map((cat) => (
             <Button
@@ -145,7 +138,6 @@ const Resto = () => {
           ))}
         </Box>
 
-        {/* Affichage des restaurants */}
         <Box mt={4}>
           {loading ? (
             <Grid
@@ -158,24 +150,36 @@ const Resto = () => {
                 md: "1fr 1fr",
               }}
             >
-              {Array(4).fill(null).map((_, index) => (
-                <Grid item key={index}>
-                  <Card sx={{ height: "100%", borderRadius: 3 }}>
-                    <Skeleton
-                      variant="rectangular"
-                      height={180}
-                      sx={{ borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                    />
-                    <CardContent>
-                      <Skeleton variant="text" height={30} width="80%" />
-                      <Skeleton variant="text" height={20} width="60%" />
-                      <Skeleton variant="text" height={20} width="50%" sx={{ mt: 1 }} />
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+              {Array(4)
+                .fill(null)
+                .map((_, i) => (
+                  <Grid item key={i}>
+                    <Link to="/PlatCard" style={{ textDecoration: "none" }}>
+                      <Card sx={{ height: "100%", borderRadius: 3 }}>
+                        <Skeleton
+                          variant="rectangular"
+                          height={180}
+                          sx={{
+                            borderTopLeftRadius: 12,
+                            borderTopRightRadius: 12,
+                          }}
+                        />
+                        <CardContent>
+                          <Skeleton variant="text" height={30} width="80%" />
+                          <Skeleton variant="text" height={20} width="60%" />
+                          <Skeleton
+                            variant="text"
+                            height={20}
+                            width="50%"
+                            sx={{ mt: 1 }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </Grid>
+                ))}
             </Grid>
-          ) : filteredRestaurants.length > 0 ? (
+          ) : filtered.length > 0 ? (
             <Grid
               container
               spacing={3}
@@ -186,41 +190,46 @@ const Resto = () => {
                 md: "1fr 1fr",
               }}
             >
-              {filteredRestaurants.map((resto) => (
-                <Grid item key={resto.idRestaurant}>
-                  <Card
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 3,
-                      transition: "transform 0.2s",
-                      "&:hover": { transform: "scale(1.02)" },
-                    }}
+              {filtered.map((r) => (
+                <Grid item key={r.idRestaurant}>
+                  <Link
+                    to={`/PlatCard/${r.idRestaurant}`}
+                    style={{ textDecoration: "none" }}
                   >
-                    <CardMedia
-                      component="img"
-                      image={resto.image || "/default-restaurant.jpg"}
-                      alt={resto.nom}
+                    <Card
                       sx={{
-                        height: 180,
-                        objectFit: "cover",
-                        borderTopLeftRadius: 12,
-                        borderTopRightRadius: 12,
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: 3,
+                        transition: "transform 0.2s",
+                        "&:hover": { transform: "scale(1.02)" },
                       }}
-                    />
-                    <CardContent>
-                      <Typography variant="h6" fontWeight={600}>
-                        {resto.nom}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {resto.adresse}
-                      </Typography>
-                      <Typography mt={1} variant="body2" color="text.secondary">
-                        Catégorie : {getCategorieNom(resto.idCategorie)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                    >
+                      <CardMedia
+                        component="img"
+                        image={r.image || "/default-restaurant.jpg"}
+                        alt={r.nom}
+                        sx={{
+                          height: 180,
+                          objectFit: "cover",
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12,
+                        }}
+                      />
+                      <CardContent>
+                        <Typography variant="h6" fontWeight={600}>
+                          {r.nom}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {r.adresse}
+                        </Typography>
+                        <Typography mt={1} variant="body2" color="text.secondary">
+                          Catégorie : {getCatNom(r.idCategorie)}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </Grid>
               ))}
             </Grid>
@@ -240,3 +249,5 @@ const Resto = () => {
 };
 
 export default Resto;
+
+

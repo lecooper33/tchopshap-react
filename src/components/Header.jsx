@@ -1,18 +1,8 @@
 import React, { useState } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Badge,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  useMediaQuery,
-  useTheme,
+  AppBar, Toolbar, Typography, Button, Box, Badge,
+  IconButton, Drawer, List, ListItem, ListItemText,
+  useMediaQuery, useTheme,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
@@ -22,16 +12,16 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { LuShoppingCart } from "react-icons/lu";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
-
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTabletOrMore = useMediaQuery(theme.breakpoints.up("sm"));
-  const isConfirmationPage = location.pathname === "/Confirmation";
 
+  const { user, logout } = useAuth(); // ✅
   const [drawerOpen, setDrawerOpen] = useState(false);
   const toggleDrawer = () => setDrawerOpen(prev => !prev);
 
@@ -46,20 +36,9 @@ const Header = () => {
       position="static"
       color="default"
       elevation={0}
-      sx={{
-        borderBottom: 1,
-        borderColor: "divider",
-        backgroundColor: "#fff",
-        px: 2,
-      }}
+      sx={{ borderBottom: 1, borderColor: "divider", backgroundColor: "#fff", px: 2 }}
     >
-      <Toolbar
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         {/* Logo */}
         <Typography
           variant="h6"
@@ -74,7 +53,7 @@ const Header = () => {
           TchôpShap
         </Typography>
 
-        {/* Navigation (desktop/tablette) */}
+        {/* Navigation desktop */}
         {isTabletOrMore && (
           <Box sx={{ display: "flex", gap: 4 }}>
             {navItems.map(({ text, to }) => (
@@ -91,14 +70,15 @@ const Header = () => {
           </Box>
         )}
 
-        {/* Actions à droite */}
+        {/* Actions */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {isConfirmationPage ? (
+          {user ? (
             <>
               <Typography sx={{ fontWeight: 500, color: "#000" }}>
-                Jean Dupont
+                {user.nom}
               </Typography>
               <Button
+                onClick={logout}
                 variant="outlined"
                 sx={{
                   textTransform: "none",
@@ -134,9 +114,9 @@ const Header = () => {
             </Badge>
           </IconButton>
 
-          {/* Menu Hamburger Mobile */}
+          {/* Hamburger mobile */}
           {isMobile && (
-            <IconButton onClick={toggleDrawer}>
+            <IconButton onClick={toggleDrawer} aria-label="Menu mobile">
               {drawerOpen ? <CloseIcon /> : <MenuIcon />}
             </IconButton>
           )}
@@ -150,7 +130,7 @@ const Header = () => {
         onClose={toggleDrawer}
         PaperProps={{
           sx: {
-            width: "50%", // moitié de l'écran
+            width: "50%",
             backgroundColor: "rgba(255,255,255,0.98)",
             pt: 2,
           },
@@ -177,7 +157,7 @@ const Header = () => {
               />
             </ListItem>
           ))}
-          {!isConfirmationPage && (
+          {!user && (
             <ListItem
               button
               component={RouterLink}
@@ -203,3 +183,4 @@ const Header = () => {
 };
 
 export default Header;
+

@@ -1,6 +1,6 @@
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-import Details from "../components/RestaurantData.jsx";
+import Details from "../components/PlatCard.jsx";
 export default function Detail(){
 
 

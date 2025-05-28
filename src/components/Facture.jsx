@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Container,
@@ -8,22 +8,59 @@ import {
   Link,
   Checkbox,
   Button,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Facture() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { total = 0, sousTotal = 0, fraisLivraison = 0 } = location.state || {};
+  const { total = 0, sousTotal = 0, fraisLivraison = 0, idUtilisateur, idPlat } = location.state || {};
 
-  const handleConfirm = () => {
-    const isConnected = localStorage.getItem("isConnected") === "true";
-    if (!isConnected) {
-      navigate("/Profil", { state: { redirectAfterLogin: "/Confirmation" } });
-    } else {
-      navigate("/Confirmation");
+  const [modePaiement, setModePaiement] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!modePaiement || !idUtilisateur || !idPlat) {
+      setErrorMessage("Informations manquantes ou méthode de paiement non sélectionnée.");
+      setOpenSnackbar(true);
+      return;
     }
+
+    setLoading(true);
+    try {
+      const commande = {
+        idUtilisateur,
+        idPlat,
+        statut: "en préparation",
+        modeDePaiement: modePaiement,
+        date_com: new Date().toISOString(),
+      };
+
+      const response = await axios.post("https://tchopshap.onrender.com/commande", commande);
+
+      if (response.status === 200 || response.status === 201) {
+        navigate("/Confirmation");
+      } else {
+        setErrorMessage("Une erreur s’est produite lors de la commande.");
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la commande :", error);
+      setErrorMessage("Impossible d’envoyer la commande. Veuillez réessayer.");
+      setOpenSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
   };
 
   return (
@@ -68,11 +105,13 @@ export default function Facture() {
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Checkbox id="carteBancaire" />
-          <Typography htmlFor="carteBancaire">Carte bancaire</Typography>
+          <Checkbox
+            checked={modePaiement === "Carte Bancaire"}
+            onChange={() => setModePaiement("Carte Bancaire")}
+          />
+          <Typography>Carte bancaire</Typography>
         </Box>
         <TextField fullWidth size="small" placeholder="1234 5678 9012 3456" sx={{ mb: 2 }} />
-
         <Box sx={{ display: "flex", gap: 2 }}>
           <Box flex={1}>
             <Typography>Date d’expiration</Typography>
@@ -86,20 +125,26 @@ export default function Facture() {
 
         <Box sx={{ mt: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Checkbox id="mobileMoney" />
-            <Typography htmlFor="mobileMoney">Mobile Money</Typography>
+            <Checkbox
+              checked={modePaiement === "Airtel Money"}
+              onChange={() => setModePaiement("Airtel Money")}
+            />
+            <Typography>Mobile Money</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Checkbox id="especes" />
-            <Typography htmlFor="especes">Espèces à la livraison</Typography>
+            <Checkbox
+              checked={modePaiement === "Espèce"}
+              onChange={() => setModePaiement("Espèce")}
+            />
+            <Typography>Espèces à la livraison</Typography>
           </Box>
         </Box>
 
-    <Link href="/Profil" underline="none" color="inherit"> 
-     <Button
+        <Button
           fullWidth
           variant="contained"
           onClick={handleConfirm}
+          disabled={loading}
           sx={{
             mt: 3,
             backgroundColor: "orange",
@@ -108,9 +153,8 @@ export default function Facture() {
             fontWeight: "bold",
           }}
         >
-          Confirmer la commande
+          {loading ? "Envoi en cours..." : "Confirmer la commande"}
         </Button>
-        </Link>  
       </Paper>
 
       {/* Récapitulatif */}
@@ -139,6 +183,14 @@ export default function Facture() {
           <Typography fontWeight="bold">{total.toLocaleString("fr-FR")} F</Typography>
         </Box>
       </Paper>
+
+      {/* Snackbar pour les erreurs */}
+      <Snackbar open={openSnackbar} autoHideDuration={4000} onClose={handleCloseSnackbar}>
+        <Alert severity="error" onClose={handleCloseSnackbar} variant="filled" sx={{ width: "100%" }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }
+

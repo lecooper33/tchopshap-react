@@ -51,7 +51,7 @@ function Footer() {
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Restaurants
               </Link>
-              <Link href="/RestaurantsDetail" underline="none" color="inherit" variant="body2"
+              <Link href="/PLatCard" underline="none" color="inherit" variant="body2"
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Plats
               </Link>
