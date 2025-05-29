@@ -1,91 +1,138 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Nécessite React Router pour la navigation
-
+import {
+  TextField,
+  Button,
+  MenuItem,
+  Snackbar,
+  Alert,
+  Typography,
+  Box,
+  Paper,
+  CircularProgress
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 function SignUp() {
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('client'); // Rôle par défaut
-  const [message, setMessage] = useState('');
+  const [role, setRole] = useState('client');
+  const [loading, setLoading] = useState(false);
+  const [snack, setSnack] = useState({ open: false, message: '', severity: 'info' });
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(''); // Réinitialise les messages précédents
+    setLoading(true);
 
     try {
-      const response = await fetch('https://tchopshap.onrender.com/inscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nom, email, password, role }),
+      const response = await axios.post('https://tchopshap.onrender.com/inscription', {
+        nom,
+        email,
+        password,
+        role,
       });
 
-      const data = await response.json();
+      const data = response.data;
+      setSnack({ open: true, message: data.message, severity: 'success' });
 
-      if (response.ok) {
-        setMessage(data.message);
-        if (data.requiresOtpVerification) {
-          // Redirige vers la page de vérification OTP en passant l'email
-          navigate('/otp', { state: { email: email } });
-        }
-      } else {
-        // Affiche le message d'erreur du backend ou un message générique
-        setMessage(data.message || 'Erreur lors de l\'inscription.');
+      if (data.requiresOtpVerification) {
+        setTimeout(() => {
+          navigate('/otp', { state: { email, role } });
+        }, 2000);
       }
     } catch (error) {
-      console.error('Erreur réseau:', error);
-      setMessage('Problème de connexion au serveur.');
+      const errMsg = error.response?.data?.message || "Erreur lors de l'inscription.";
+      setSnack({ open: true, message: errMsg, severity: 'error' });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseSnack = () => {
+    setSnack({ ...snack, open: false });
   };
 
   return (
     <div>
-      <h2>Inscription</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="nom">Nom :</label>
-          <input
-            type="text"
-            id="nom"
+      <Header/>
+  
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#f4f6f8' }}>
+      <Paper elevation={3} sx={{ p: 4, width: '100%', maxWidth: 450 }}>
+        <Typography variant="h5" align="center" gutterBottom>
+          Créez votre compte
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Nom"
+            variant="outlined"
+            fullWidth
+            margin="normal"
             value={nom}
             onChange={(e) => setNom(e.target.value)}
             required
           />
-        </div>
-        <div>
-          <label htmlFor="email">Email :</label>
-          <input
+          <TextField
+            label="Email"
             type="email"
-            id="email"
+            variant="outlined"
+            fullWidth
+            margin="normal"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-        </div>
-        <div>
-          <label htmlFor="password">Mot de passe :</label>
-          <input
+          <TextField
+            label="Mot de passe"
             type="password"
-            id="password"
+            variant="outlined"
+            fullWidth
+            margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-        </div>
-        <div>
-          <label htmlFor="role">Rôle :</label>
-          <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="client">client</option>
-            <option value="administrateur">administrateur</option>
-            {/* Ajoutez d'autres rôles si nécessaire */}
-          </select>
-        </div>
-        <button type="submit">S'inscrire</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+          <TextField
+            select
+            label="Rôle"
+            fullWidth
+            margin="normal"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <MenuItem value="client">Client</MenuItem>
+            <MenuItem value="administrateur">Administrateur</MenuItem>
+          </TextField>
+
+          <Button 
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            disabled={loading}
+            sx={{ mt: 2, py: 1.5, backgroundColor:"orange" }}
+          >
+            {loading ? <CircularProgress size={24} color="orange" /> : "S'inscrire"}
+          </Button>
+        </form>
+      </Paper>
+
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnack}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnack} severity={snack.severity} sx={{ width: '100%' }}>
+          {snack.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+    <Footer/>
+      </div>
   );
 }
 

@@ -8,23 +8,17 @@ import Profil from "./pages/Profil.jsx";
 import Panier from "./pages/Cart.jsx";
 import Paiement from "./pages/Paiement.jsx";
 import Confirmation from "./pages/Confirmation.jsx";
-
 import Otp from "./pages/Otp.jsx"
-
+import PlatCard from "./components/PlatCard.jsx";
+import SignUp from "./pages/SignUp.jsx";
 // Pages administrateur
 
 import Admin from "./admin/pages/Admin.jsx";
 import Dashboard from "./admin/pages/Dashboard.jsx";
 import Plats from "./admin/pages/Plats.jsx";
-import Commandes from "./admin/pages/Commandes.jsx";
-import Livraisons from "./admin/pages/Livraisons.jsx";
-import Livreurs from "./admin/pages/Livreurs.jsx";
-import Restaurants from "./admin/pages/Restaurants.jsx";
-import Categories from "./admin/pages/Categories.jsx";
 import LoginAdmin from "./admin/pages/Login.jsx";
-import SignUp from "./pages/SignUp.jsx";
 import Client from "./admin/pages/Clients.jsx";
-import PlatCard from "./components/PlatCard.jsx";
+import Restaurants from "./admin/pages/Restaurants.jsx"
 function App() {
   return (
     <Router>
@@ -46,11 +40,7 @@ function App() {
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/plats" element={<Plats />} />
         <Route path="/admin/restaurants" element={<Restaurants />} />
-        <Route path="/admin/categories" element={<Categories />} />
-        <Route path="/admin/commandes" element={<Commandes />} />
-        <Route path="/admin/livraisons" element={<Livraisons />} />
-        <Route path="/admin/livreurs" element={<Livreurs />} />
-         <Route path="/admin/client" element={<Client />} />
+        <Route path="/admin/client" element={<Client />} />
       </Routes>
     </Router>
   );

@@ -86,8 +86,8 @@ function ClientUpload() {
               <Typography variant="body2" color="text.secondary">{user.numeroDeTel || "Numéro non fourni"}</Typography>
 
               <Box mt={1} display="flex" gap={1}>
-                {user.rôle && (
-                  <Chip label={user.rôle} size="small" color="primary" />
+                {user.role && (
+                  <Chip label={user.role} size="small" color="primary" />
                 )}
                 <Chip
                   label={user.verifie === "FALSE" ? "Non vérifié" : "Vérifié"}

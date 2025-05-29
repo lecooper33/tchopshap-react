@@ -1,141 +1,143 @@
-import { Box, TextField, Typography, Paper, Button, FormControlLabel, Checkbox } from "@mui/material";
-import axios from "axios";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import React, { useState } from 'react';
+import axios from 'axios';
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  FormControlLabel,
+  Checkbox,
+} from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
 
-export default function LoginAdmin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [errors, setErrors] = useState({ email: "", password: "", general: "" });
+
+function LoginAdmin() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState(false);
   const navigate = useNavigate();
-
-  // This function would typically be provided by your authentication context
-  // or a global state management system.
-  // For this example, we'll just log the user object.
-  const Login = (user) => {
-    console.log("User logged in:", user);
-    // In a real application, you would store user data in context/global state
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors({ email: "", password: "", general: "" });
-
-    if (!email.trim()) {
-      setErrors((prev) => ({ ...prev, email: "L'adresse e-mail est requise." }));
-      return;
-    }
-    if (!password.trim()) {
-      setErrors((prev) => ({ ...prev, password: "Le mot de passe est requis." }));
-      return;
-    }
+    setMessage('');
+    setError(false);
 
     try {
-      const response = await axios.post("https://tchopshap.onrender.com/connexion", {
-        email: email.trim(),
-        password: password.trim(),
+      const response = await axios.post('https://tchopshap.onrender.com/connexion', {
+        email,
+        password,
       });
-      console.log("Réponse serveur :", response.data);
 
-      const { token, userId, role, verified } = response.data; // Destructure directly from response.data
+      const data = response.data;
 
-      if (!token || !userId || !role) {
-        setErrors((prev) => ({ ...prev, general: "Connexion échouée : données manquantes." }));
-        console.error("Données manquantes dans la réponse :", response.data);
-        return;
-      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('userRole', data.role);
 
-      const user = { id: userId, role, verified };
+      setMessage(data.message);
 
-      if (rememberMe) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("email", email);
-        localStorage.setItem("role", role); // Store role for persistence if needed
+      if (data.role === 'administrateur') {
+        navigate('/admin');
       } else {
-        sessionStorage.setItem("token", token);
-        sessionStorage.setItem("role", role); // Store role for persistence if needed
+        navigate('/');
       }
-
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      Login(user); // Call your Login function (e.g., to update authentication context)
-
-      // --- Redirection Logic ---
-      if (role === "administrateur") {
-        navigate("/admin");
-      } else {
-        navigate("/"); // Redirect to Home if not an administrator
-      }
-    } catch (error) {
-      console.error("Erreur lors de la connexion :", error);
-      if (error.response) {
-        if (error.response.status === 401) {
-          setErrors((prev) => ({ ...prev, general: "E-mail ou mot de passe incorrect." }));
-        } else if (error.response.data?.message) {
-          setErrors((prev) => ({ ...prev, general: error.response.data.message }));
-        } else {
-          setErrors((prev) => ({ ...prev, general: "Erreur serveur. Réessayez plus tard." }));
-        }
-      } else if (error.request) {
-        setErrors((prev) => ({ ...prev, general: "Impossible de joindre le serveur." }));
-      } else {
-        setErrors((prev) => ({ ...prev, general: "Erreur inattendue." }));
-      }
+    } catch (err) {
+      setError(true);
+      setMessage(err.response?.data?.message || 'Problème de connexion au serveur.');
     }
   };
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <Paper sx={{ width: 400, p: 4 }} elevation={3}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Connexion Admin
+    <div>
+
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          maxWidth: 400,
+          mx: 'auto',
+          mt: 5,
+          p: 4,
+          borderRadius: 2,
+          bgcolor: '#fff',
+          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
+        <Typography variant="h5" fontWeight="bold" align="center">
+          Connexion Administrateur
         </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            sx={{ mb: 2 }}
-            type="email"
-            label="Email"
-            fullWidth
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            error={!!errors.email}
-            helperText={errors.email}
-          />
-          <TextField
-            sx={{ mb: 2 }}
-            type="password"
-            label="Mot de passe"
-            fullWidth
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={!!errors.password}
-            helperText={errors.password}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Se souvenir de moi"
-            sx={{ mb: 2 }}
-          />
-          {errors.general && (
-            <Typography color="error" align="center" sx={{ mb: 2 }}>
-              {errors.general}
-            </Typography>
-          )}
-          <Box display="flex" justifyContent="center">
-            <Button variant="contained" color="primary" type="submit" sx={{ backgroundColor: "orange" }}>
-              Se connecter
-            </Button>
-          </Box>
-        </form>
-      </Paper>
-    </Box>
+        <Typography align="center" color="text.secondary">
+          Connectez-vous pour accéder à votre compte
+        </Typography>
+
+
+        {/* Champ Email */}
+          <Typography fontWeight="bold" sx={{ fontSize: '14px' }}>
+            Adresse e-mail
+          </Typography>
+        <TextField
+          placeholder='votre@email.com'
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        {/* Mot de passe + lien */}
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography fontWeight="bold" sx={{ fontSize: '14px' }}>
+            Mot de passe
+          </Typography>
+          
+        </Box>
+
+        {/* Champ mot de passe */}
+        <TextField
+          placeholder='Votre mot de passe'
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        {/* Checkbox se souvenir */}
+        <FormControlLabel
+          control={<Checkbox size="small" />}
+          label="Se souvenir de moi"
+        />
+
+        {/* Bouton se connecter */}
+        <Button
+          type="submit"
+          variant="contained"
+          sx={{ bgcolor: '#f97316', '&:hover': { bgcolor: '#fb923c' }, mt: 1 }}
+        >
+          Se connecter
+        </Button>
+
+        {/* Message d'erreur ou succès */}
+        {message && (
+          <Alert severity={error ? 'error' : 'success'}>
+            {message}
+          </Alert>
+        )}
+
+        {/* Lien d'inscription */}
+        <Typography align="center" fontSize={14}>
+          Vous n’avez pas de compte ?{' '}
+          <Link to="/signup" style={{ color: 'orange', textDecoration: 'none' }}>
+            S’inscrire
+          </Link>
+        </Typography>
+      </Box>
+ 
+    </div>
   );
 }
+
+export default LoginAdmin;

@@ -9,9 +9,7 @@ import {
   People as PeopleIcon,
   Restaurant as RestaurantIcon,
   ShoppingCart as ShoppingCartIcon,
-  Category as CategoryIcon,
-  LocalShipping as LocalShippingIcon,
-  DeliveryDining as DeliveryDiningIcon
+
 } from "@mui/icons-material";
 import { Link, useLocation } from "react-router-dom";
 
@@ -24,9 +22,9 @@ const menuItems = [
   { text: "Plats", icon: <RestaurantIcon />, path: "/admin/plats" },
   { text: "Commandes", icon: <ShoppingCartIcon />, path: "/admin/commandes" },
   { text: "Restaurants", icon: <RestaurantIcon />, path: "/admin/restaurants" },
-  { text: "Catégories", icon: <CategoryIcon />, path: "/admin/categories" },
-  { text: "Livraisons", icon: <LocalShippingIcon />, path: "/admin/livraisons" },
-  { text: "Livreurs", icon: <DeliveryDiningIcon />, path: "/admin/livreurs" },
+
+ 
+ 
 ];
 
 export default function AdminLayout({ children }) {
@@ -53,7 +51,7 @@ export default function AdminLayout({ children }) {
         {menuItems.map((item) => (
           <Tooltip key={item.text} title={collapsed ? item.text : ""} placement="right">
             <ListItem
-              button
+              button={true}
               component={Link}
               to={item.path}
               selected={location.pathname === item.path}

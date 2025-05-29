@@ -74,9 +74,13 @@ const Header = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           {user ? (
             <>
+            <Box display={'flex'} gap={1}>
+              <Typography color="black" fontWeight={'bold'}>Bonjour</Typography>
               <Typography sx={{ fontWeight: 500, color: "#000" }}>
                 {user.nom}
               </Typography>
+            </Box>
+              
               <Button
                 onClick={logout}
                 variant="outlined"
