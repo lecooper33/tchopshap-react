@@ -1,4 +1,4 @@
-import React, { useState,  useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   AppBar, Box, CssBaseline, Drawer, IconButton, List, ListItem,
@@ -11,9 +11,8 @@ import {
   People as PeopleIcon,
   Restaurant as RestaurantIcon,
   ShoppingCart as ShoppingCartIcon,
-
 } from "@mui/icons-material";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const FULL_DRAWER_WIDTH = 200;
 const COLLAPSED_DRAWER_WIDTH = 70;
@@ -25,40 +24,41 @@ const menuItems = [
   { text: "Commandes", icon: <ShoppingCartIcon />, path: "/admin/commandes" },
   { text: "Restaurants", icon: <RestaurantIcon />, path: "/admin/restaurants" },
 ];
-const handleLogout = () =>{
-  localStorage.removeItem('token');
-  localStorage.removeItem('userId')
-  localStorage.removeItem('userRole')
-  // navigate('/admin/login')
-}
-
 
 export default function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-// Ajout d'un etat pour stocker l'utilisateur
-const [adminName, setAdminName] = useState("");
-const [adminImage, setAdminImage] = useState(null);
+  // Ajout d'un état pour stocker l'utilisateur
+  const [adminName, setAdminName] = useState("");
+  const [adminImage, setAdminImage] = useState(null);
 
+  // 🔧 Fonction de déconnexion maintenant à l'intérieur
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
+    navigate("/admin/login");
+  };
 
-  // Charggment du nom de l'admin
+  // Chargement du nom de l'admin
   useEffect(() => {
-  const userId = localStorage.getItem("userId");
-  if (userId) {
-    axios
-      .get(`https://tchopshap.onrender.com/utilisateurs/${userId}`)
-      .then((res) => {
-        const user = res.data;
-        setAdminName(user.nom);
-        setAdminImage(user.image);
-      })
-      .catch((err) => {
-        console.error("Erreur lors de la récupération de l'admin :", err);
-      });
-  }
-}, []);
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      axios
+        .get(`https://tchopshap.onrender.com/utilisateurs/${userId}`)
+        .then((res) => {
+          const user = res.data;
+          setAdminName(user.nom);
+          setAdminImage(user.image);
+        })
+        .catch((err) => {
+          console.error("Erreur lors de la récupération de l'admin :", err);
+        });
+    }
+  }, []);
 
   const toggleDrawer = () => setMobileOpen(!mobileOpen);
   const toggleCollapse = () => setCollapsed(!collapsed);
@@ -163,22 +163,24 @@ const [adminImage, setAdminImage] = useState(null);
               <MenuIcon />
             </IconButton>
           </Box>
-        <Box display={'flex'} gap={2}>
-          <Box display="flex" alignItems="center" gap={1}>
-        <Typography fontWeight="bold" textTransform="capitalize">
-               {adminName || "Admin"}
-                         </Typography>
-                   <Avatar src={adminImage || "https://i.pravatar.cc/150?img=1"} />
+
+          <Box display={'flex'} gap={2}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography fontWeight="bold" textTransform="capitalize">
+                {adminName || "Admin"}
+              </Typography>
+              <Avatar src={adminImage || "https://i.pravatar.cc/150?img=1"} />
             </Box>
 
-           <Button onClick={handleLogout}
-        variant="contained" sx={{border:"1px solid white"}}
-        >
-          Se deconecter
-        </Button>
-        </Box>
+            <Button
+              onClick={handleLogout}
+              variant="contained"
+              sx={{ border: "1px solid white" }}
+            >
+              Se deconnecter
+            </Button>
+          </Box>
         </Toolbar>
-       
       </AppBar>
 
       {/* SIDEBAR */}
@@ -201,7 +203,7 @@ const [adminImage, setAdminImage] = useState(null);
           sx={{
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
-              width: "50vw", // ouverture à moitié sur mobile
+              width: "50vw",
               boxSizing: "border-box",
             },
           }}

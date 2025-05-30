@@ -2,7 +2,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Typography, MenuItem
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Dropzone from "react-dropzone";
 import axios from "axios";
 
@@ -14,14 +14,21 @@ function RestaurantForm() {
     idCategorie: '',
     image: ''
   });
+  const [categories, setCategories] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  const categories = [
-    { id: 1, nom: "Africain" },
-    { id: 2, nom: "Europeen" },
-    { id: 3, nom: "Asiatique" },
-    
-  ];
+  // Cette section charge les catégories depuis l'API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("https://tchopshap.onrender.com/categorie");
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des catégories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
@@ -37,6 +44,7 @@ function RestaurantForm() {
     }));
   };
 
+  // Cette section permet d'heberger les images sur cloudinary
   const handleImageUpload = async (acceptedFiles) => {
     setUploading(true);
     const file = acceptedFiles[0];
@@ -61,6 +69,7 @@ function RestaurantForm() {
     }
   };
 
+  // Cette section permet la creation d'un nouveau restaurant
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -69,6 +78,7 @@ function RestaurantForm() {
       handleClose();
     } catch (error) {
       console.error("Erreur lors de l'ajout du restaurant:", error);
+      console.log("reponse");
     }
   };
 
@@ -112,8 +122,8 @@ function RestaurantForm() {
               required
             >
               {categories.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.nom}
+                <MenuItem key={cat.idCategorie} value={cat.idCategorie}>
+                  {cat.categorie}
                 </MenuItem>
               ))}
             </TextField>
