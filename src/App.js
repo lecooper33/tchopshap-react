@@ -19,6 +19,8 @@ import Plats from "./admin/pages/Plats.jsx";
 import LoginAdmin from "./admin/pages/Login.jsx";
 import Client from "./admin/pages/Clients.jsx";
 import Restaurants from "./admin/pages/Restaurants.jsx"
+// pour la protection des routes admin
+import PrivateRoutes from "./admin/components/PrivateRoutes.jsx";
 function App() {
   return (
     <Router>
@@ -35,12 +37,12 @@ function App() {
         <Route path="/otp" element={<Otp />} />
         {/* Routes administrateur */}
         
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<PrivateRoutes><Admin /></PrivateRoutes>} />
         <Route path="/admin/Login" element={<LoginAdmin />} />
-        <Route path="/admin/dashboard" element={<Dashboard />} />
-        <Route path="/admin/plats" element={<Plats />} />
-        <Route path="/admin/restaurants" element={<Restaurants />} />
-        <Route path="/admin/client" element={<Client />} />
+        <Route path="/admin/dashboard" element={<PrivateRoutes><Dashboard /></PrivateRoutes>} />
+        <Route path="/admin/plats" element={<PrivateRoutes><Plats /></PrivateRoutes>} />
+        <Route path="/admin/restaurants" element={<PrivateRoutes><Restaurants /></PrivateRoutes>} />
+        <Route path="/admin/client" element={<PrivateRoutes><Client /></PrivateRoutes>} />
       </Routes>
     </Router>
   );

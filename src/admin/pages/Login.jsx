@@ -29,12 +29,13 @@ function LoginAdmin() {
         email,
         password,
       });
-
+      console.log("reponse", response.data)
       const data = response.data;
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.userId);
       localStorage.setItem('userRole', data.role);
+      localStorage.setItem("userId", response.data.userId);
 
       setMessage(data.message);
 

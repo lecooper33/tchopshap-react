@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState,  useEffect } from "react";
+import axios from "axios";
 import {
   AppBar, Box, CssBaseline, Drawer, IconButton, List, ListItem,
-  ListItemIcon, ListItemText, Toolbar, Typography, Avatar, Divider, Tooltip
+  ListItemIcon, ListItemText, Toolbar, Typography, Avatar, Divider, Tooltip,
+  Button
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -22,15 +24,41 @@ const menuItems = [
   { text: "Plats", icon: <RestaurantIcon />, path: "/admin/plats" },
   { text: "Commandes", icon: <ShoppingCartIcon />, path: "/admin/commandes" },
   { text: "Restaurants", icon: <RestaurantIcon />, path: "/admin/restaurants" },
-
- 
- 
 ];
+const handleLogout = () =>{
+  localStorage.removeItem('token');
+  localStorage.removeItem('userId')
+  localStorage.removeItem('userRole')
+  // navigate('/admin/login')
+}
+
 
 export default function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+
+// Ajout d'un etat pour stocker l'utilisateur
+const [adminName, setAdminName] = useState("");
+const [adminImage, setAdminImage] = useState(null);
+
+
+  // Charggment du nom de l'admin
+  useEffect(() => {
+  const userId = localStorage.getItem("userId");
+  if (userId) {
+    axios
+      .get(`https://tchopshap.onrender.com/utilisateurs/${userId}`)
+      .then((res) => {
+        const user = res.data;
+        setAdminName(user.nom);
+        setAdminImage(user.image);
+      })
+      .catch((err) => {
+        console.error("Erreur lors de la récupération de l'admin :", err);
+      });
+  }
+}, []);
 
   const toggleDrawer = () => setMobileOpen(!mobileOpen);
   const toggleCollapse = () => setCollapsed(!collapsed);
@@ -135,12 +163,22 @@ export default function AdminLayout({ children }) {
               <MenuIcon />
             </IconButton>
           </Box>
-
+        <Box display={'flex'} gap={2}>
           <Box display="flex" alignItems="center" gap={1}>
-            <Typography fontWeight="bold">Garland Brel</Typography>
-            <Avatar src="https://i.pravatar.cc/150?img=1" />
-          </Box>
+        <Typography fontWeight="bold" textTransform="capitalize">
+               {adminName || "Admin"}
+                         </Typography>
+                   <Avatar src={adminImage || "https://i.pravatar.cc/150?img=1"} />
+            </Box>
+
+           <Button onClick={handleLogout}
+        variant="contained" sx={{border:"1px solid white"}}
+        >
+          Se deconecter
+        </Button>
+        </Box>
         </Toolbar>
+       
       </AppBar>
 
       {/* SIDEBAR */}
