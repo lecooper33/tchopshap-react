@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -8,14 +8,25 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅
 
 export default function Panier() {
   const location = useLocation();
+  const navigate = useNavigate();
   const plat = location.state?.plat;
-
+  const { user } = useAuth(); // ✅
   const [quantite, setQuantite] = useState(1);
-  const fraisLivraison = 1000; // En Franc CFA
+  const fraisLivraison = 1000;
+
+  // ✅ Sauvegarde dans localStorage
+  useEffect(() => {
+    if (plat) {
+      localStorage.setItem("panier", JSON.stringify({ plat, quantite }));
+    }
+  }, [plat, quantite]);
+  console.log("ID du plat :", plat?.idPlat);
+  console.log("ID du restaurant :", plat?.idRestaurant);
 
   if (!plat) {
     return (
@@ -33,15 +44,30 @@ export default function Panier() {
     });
 
   const ajusterQuantite = (action) => {
-    setQuantite((prevQuantite) => {
-      if (action === "augmenter") return prevQuantite + 1;
-      if (action === "diminuer") return Math.max(1, prevQuantite - 1);
+    setQuantite((prev) => {
+      if (action === "augmenter") return prev + 1;
+      if (action === "diminuer") return Math.max(1, prev - 1);
       if (action === "reset") return 1;
     });
   };
 
   const sousTotal = plat.prix * quantite;
   const total = sousTotal + fraisLivraison;
+
+  const handleCommander = () => {
+    const panierData = { plat, quantite, sousTotal, total, fraisLivraison };
+    localStorage.setItem("panier", JSON.stringify(panierData)); // ✅ pour Paiement
+
+    if (user) {
+      navigate("/Paiement", { state: panierData });
+    } else {
+      navigate("/profil", {
+        state: {
+          from: "/Paiement",
+        },
+      });
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -107,24 +133,19 @@ export default function Panier() {
           <Typography fontWeight="bold">{formatPrix(total)}</Typography>
         </Box>
 
-        <Link
-          to="/Paiement"
-          state={{ total, sousTotal, fraisLivraison, plat, quantite }}
-          style={{ textDecoration: "none" }}
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={handleCommander} // ✅
+          sx={{
+            mt: 3,
+            backgroundColor: "#F97316",
+            color: "white",
+            "&:hover": { backgroundColor: "#ea580c" },
+          }}
         >
-          <Button
-            fullWidth
-            variant="contained"
-            sx={{
-              mt: 3,
-              backgroundColor: "#F97316",
-              color: "white",
-              "&:hover": { backgroundColor: "#ea580c" },
-            }}
-          >
-            Commander
-          </Button>
-        </Link>
+          Commander
+        </Button>
       </Paper>
     </Container>
   );

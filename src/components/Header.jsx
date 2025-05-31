@@ -103,6 +103,7 @@ const Header = () => {
                 component={RouterLink}
                 to="/Profil"
                 color="inherit"
+                state={{from:location.pathname}}
                 startIcon={<PersonOutlineIcon />}
                 sx={{ textTransform: "none" }}
               >

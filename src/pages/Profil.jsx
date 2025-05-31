@@ -5,7 +5,7 @@ import {
   Box, TextField, Button, Typography, Alert,
   FormControlLabel, Checkbox
 } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext"; // ✅
@@ -17,7 +17,7 @@ function Profil() {
   const [error, setError] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth(); // ✅
-
+  const location = useLocation();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -48,8 +48,9 @@ function Profil() {
 
         login(userData); //  Stocker dans le contexte
         setMessage(data.message);
-
-        navigate(userData.role === "administrateur" ? "/admin" : "/");
+        
+        const redirectPath = location.state?.from || (userData.role === "administrateur" ? "/admin" : "/")
+        navigate(redirectPath);
       } else {
         throw new Error("Utilisateur non trouvé.");
       }

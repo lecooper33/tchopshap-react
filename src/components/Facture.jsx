@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
   Paper,
   TextField,
   Typography,
-  Link,
   Checkbox,
   Button,
   Snackbar,
@@ -14,16 +13,22 @@ import {
 import { ArrowBack } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 export default function Facture() {
   const location = useLocation();
   const navigate = useNavigate();
   const { total = 0, sousTotal = 0, fraisLivraison = 0, idUtilisateur, idPlat } = location.state || {};
+  const user = useAuth();
 
   const [modePaiement, setModePaiement] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const [numeroMobile, setNumeroMobile] = useState("");
+
+  const panier = location.state || JSON.parse(localStorage.getItem("panier"));
 
   const handleConfirm = async () => {
     if (!modePaiement || !idUtilisateur || !idPlat) {
@@ -63,14 +68,23 @@ export default function Facture() {
     setOpenSnackbar(false);
   };
 
+  useEffect(() => {
+    if (!user) {
+      navigate("/profil", { state: { from: location.pathname } });
+    }
+  }, [user, navigate, location]);
+
+  // 🔙 Fonction pour retourner à la page Cart avec les données précédentes
+  const handleBack = () => {
+    navigate("/Cart", { state: { idPlat, idUtilisateur, total, sousTotal, fraisLivraison } });
+  };
+
   return (
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 3 }}>
-        <Link href="/Cart" underline="none" color="inherit">
-          <Typography variant="h6" sx={{ display: "flex", alignItems: "center" }}>
-            <ArrowBack /> Retour
-          </Typography>
-        </Link>
+        <Button onClick={handleBack} sx={{ color: "black", textTransform: "none" }}>
+          <ArrowBack /> <Typography ml={1}>Retour</Typography>
+        </Button>
 
         <Typography variant="h5" fontWeight="bold" mt={2} mb={1}>
           Finaliser la commande
@@ -104,6 +118,7 @@ export default function Facture() {
           Méthode de paiement
         </Typography>
 
+        {/* Carte Bancaire */}
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
           <Checkbox
             checked={modePaiement === "Carte Bancaire"}
@@ -111,18 +126,24 @@ export default function Facture() {
           />
           <Typography>Carte bancaire</Typography>
         </Box>
-        <TextField fullWidth size="small" placeholder="1234 5678 9012 3456" sx={{ mb: 2 }} />
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Box flex={1}>
-            <Typography>Date d’expiration</Typography>
-            <TextField fullWidth size="small" placeholder="MM/AA" />
-          </Box>
-          <Box flex={1}>
-            <Typography>CVV</Typography>
-            <TextField fullWidth size="small" placeholder="123" />
-          </Box>
-        </Box>
 
+        {modePaiement === "Carte Bancaire" && (
+          <Box>
+            <TextField fullWidth size="small" placeholder="1234 5678 9012 3456" sx={{ mb: 2 }} />
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Box flex={1}>
+                <Typography>Date d’expiration</Typography>
+                <TextField fullWidth size="small" placeholder="MM/AA" />
+              </Box>
+              <Box flex={1}>
+                <Typography>CVV</Typography>
+                <TextField fullWidth size="small" placeholder="123" />
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+        {/* Mobile Money */}
         <Box sx={{ mt: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Checkbox
@@ -131,13 +152,25 @@ export default function Facture() {
             />
             <Typography>Mobile Money</Typography>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Checkbox
-              checked={modePaiement === "Espèce"}
-              onChange={() => setModePaiement("Espèce")}
+          {modePaiement === "Airtel Money" && (
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Numéro Mobile Money"
+              sx={{ mt: 1 }}
+              value={numeroMobile}
+              onChange={(e) => setNumeroMobile(e.target.value)}
             />
-            <Typography>Espèces à la livraison</Typography>
-          </Box>
+          )}
+        </Box>
+
+        {/* Espèces */}
+        <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+          <Checkbox
+            checked={modePaiement === "Espèce"}
+            onChange={() => setModePaiement("Espèce")}
+          />
+          <Typography>Espèces à la livraison</Typography>
         </Box>
 
         <Button
@@ -173,12 +206,7 @@ export default function Facture() {
           <Typography>{fraisLivraison.toLocaleString("fr-FR")} F</Typography>
         </Box>
 
-        <Box
-          borderTop="2px solid #000"
-          pt={2}
-          display="flex"
-          justifyContent="space-between"
-        >
+        <Box borderTop="2px solid #000" pt={2} display="flex" justifyContent="space-between">
           <Typography fontWeight="bold">Total</Typography>
           <Typography fontWeight="bold">{total.toLocaleString("fr-FR")} F</Typography>
         </Box>
@@ -193,4 +221,3 @@ export default function Facture() {
     </Container>
   );
 }
-

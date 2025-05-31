@@ -248,7 +248,13 @@ const PlatCard = () => {
                           variant="contained"
                           color="warning"
                           size="small"
-                          onClick={() => navigate("/Cart", { state: { plat } })}
+                          onClick={() => navigate("/Cart", 
+                            { state: { plat:{
+                                  ...plat,
+                                  idPlat: plat.idPlat,
+                                  idRestaurant: plat.idRestaurant,
+                                           } } 
+                                })}
                         >
                           Ajouter
                         </Button>
