@@ -15,14 +15,17 @@ export default function Panier() {
   const location = useLocation();
   const navigate = useNavigate();
   const plat = location.state?.plat;
-  const { user } = useAuth(); // ✅
+  const { user } = useAuth(); 
   const [quantite, setQuantite] = useState(1);
   const fraisLivraison = 1000;
 
-  // ✅ Sauvegarde dans localStorage
+  //  Sauvegarde dans localStorage
   useEffect(() => {
-    if (plat) {
-      localStorage.setItem("panier", JSON.stringify({ plat, quantite }));
+    if (!plat) {
+     const panierLocal = JSON.parse(localStorage.getItem("panier"))
+     if (panierLocal?.plat){
+      navigate("/cart", {state:{plat:panierLocal}})
+     }
     }
   }, [plat, quantite]);
   console.log("ID du plat :", plat?.idPlat);

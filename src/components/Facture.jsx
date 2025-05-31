@@ -29,7 +29,7 @@ export default function Facture() {
   const [numeroMobile, setNumeroMobile] = useState("");
 
   const panier = location.state || JSON.parse(localStorage.getItem("panier"));
-
+  const plat = panier?.plat;
   const handleConfirm = async () => {
     if (!modePaiement || !idUtilisateur || !idPlat) {
       setErrorMessage("Informations manquantes ou méthode de paiement non sélectionnée.");
@@ -74,9 +74,9 @@ export default function Facture() {
     }
   }, [user, navigate, location]);
 
-  // 🔙 Fonction pour retourner à la page Cart avec les données précédentes
+  //  Fonction pour retourner à la page Cart avec les données précédentes
   const handleBack = () => {
-    navigate("/Cart", { state: { idPlat, idUtilisateur, total, sousTotal, fraisLivraison } });
+    navigate("/Cart", { state: { idPlat, idUtilisateur, total, sousTotal, fraisLivraison,plat, quantite: 1  } });
   };
 
   return (
