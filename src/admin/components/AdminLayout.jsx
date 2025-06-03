@@ -35,7 +35,7 @@ export default function AdminLayout({ children }) {
   const [adminName, setAdminName] = useState("");
   const [adminImage, setAdminImage] = useState(null);
 
-  // 🔧 Fonction de déconnexion maintenant à l'intérieur
+  //  Fonction de déconnexion maintenant à l'intérieur
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");

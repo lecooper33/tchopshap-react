@@ -37,7 +37,7 @@ function RestaurantForm() {
     console.log("ID utilisateur récupéré du localStorage:", userId);
     setFormData(prev => ({
       ...prev,
-      idUtilisateur: userId
+      idUtilisateur: userId 
     }));
   }, []);
 
