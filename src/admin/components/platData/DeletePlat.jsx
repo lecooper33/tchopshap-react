@@ -18,13 +18,35 @@ function DeletePlat() {
   const [form, setForm] = useState({ nom: "", prix: "", details: "", image: "" });
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const userId = parseInt(localStorage.getItem("userId")); 
 
   useEffect(() => {
-    axios.get("https://tchopshap.onrender.com/plat")
-      .then(res => setPlats(res.data))
-      .catch(err => console.error(err));
-  }, []);
+  const fetchData = async () => {
+    try {
+      const [platsRes, restosRes] = await Promise.all([
+        axios.get("https://tchopshap.onrender.com/plat"),
+        axios.get("https://tchopshap.onrender.com/restaurant"),
+      ]);
 
+      const userRestaurant = restosRes.data.find(r => r.idUtilisateur === userId);
+
+      if (!userRestaurant) {
+        console.warn("Aucun restaurant trouvé pour cet utilisateur.");
+        setPlats([]);
+        return;
+      }
+
+      const platsDuRestaurant = platsRes.data.filter(p => p.idRestaurant === userRestaurant.idRestaurant);
+      setPlats(platsDuRestaurant);
+    } catch (error) {
+      console.error("Erreur de chargement :", error);
+    }
+  };
+
+  fetchData();
+}, [userId]);
+
+ 
   const handleDelete = async (id) => {
     try {
       await axios.delete(`https://tchopshap.onrender.com/plat/${id}`);
