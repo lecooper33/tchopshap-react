@@ -2,7 +2,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Typography
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Dropzone from "react-dropzone";
 import axios from "axios";
 
@@ -11,7 +11,7 @@ function PlatsForm() {
   const [formData, setFormData] = useState({
     nom: '',
     prix: '',
-    description: '',
+    details: '',
     image: ''
   });
   const [uploading, setUploading] = useState(false);
@@ -19,7 +19,7 @@ function PlatsForm() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
-    setFormData({ nom: '', prix: '', description: '', image: '' });
+    setFormData({ nom: '', prix: '', details: '', image: '' });
   };
 
   const handleChange = (e) => {
@@ -29,6 +29,14 @@ function PlatsForm() {
       [name]: value
     }));
   };
+    useEffect(() => {
+      const userId = localStorage.getItem("userId");
+      console.log("ID utilisateur récupéré du localStorage:", userId);
+      setFormData(prev => ({
+        ...prev,
+        idUtilisateur: userId
+      }));
+    }, []);
 
   const handleImageUpload = async (acceptedFiles) => {
     setUploading(true);
@@ -96,7 +104,7 @@ function PlatsForm() {
             />
             <TextField
               fullWidth
-              name="description"
+              name="details"
               label="Description"
               multiline
               rows={4}

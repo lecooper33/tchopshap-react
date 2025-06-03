@@ -8,28 +8,44 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useLocation, useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // ✅
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Panier() {
   const location = useLocation();
   const navigate = useNavigate();
   const plat = location.state?.plat;
-  const { user } = useAuth(); 
+  const { user } = useAuth();
   const [quantite, setQuantite] = useState(1);
   const fraisLivraison = 1000;
 
-  //  Sauvegarde dans localStorage
+  // Sauvegarde dans localStorage
   useEffect(() => {
     if (!plat) {
-     const panierLocal = JSON.parse(localStorage.getItem("panier"))
-     if (panierLocal?.plat){
-      navigate("/cart", {state:{plat:panierLocal}})
-     }
+      const panierLocal = JSON.parse(localStorage.getItem("panier"));
+      if (panierLocal?.plat) {
+        navigate("/cart", { state: { plat: panierLocal } });
+      }
     }
-  }, [plat, quantite]);
-  console.log("ID du plat :", plat?.idPlat);
-  console.log("ID du restaurant :", plat?.idRestaurant);
+  }, [plat, quantite, navigate]);
+
+  const formatPrix = (prix) => {
+    if (prix == null) return "0 XOF";
+    return prix.toLocaleString("fr-FR", {
+      style: "currency",
+      currency: "XOF",
+      minimumFractionDigits: 0,
+    });
+  };
+
+  const ajusterQuantite = (action) => {
+    setQuantite((prev) => {
+      if (action === "augmenter") return prev + 1;
+      if (action === "diminuer") return Math.max(1, prev - 1);
+      if (action === "reset") return 1;
+      return prev;
+    });
+  };
 
   if (!plat) {
     return (
@@ -39,36 +55,17 @@ export default function Panier() {
     );
   }
 
-  const formatPrix = (prix) =>
-    prix.toLocaleString("fr-FR", {
-      style: "currency",
-      currency: "XOF",
-      minimumFractionDigits: 0,
-    });
-
-  const ajusterQuantite = (action) => {
-    setQuantite((prev) => {
-      if (action === "augmenter") return prev + 1;
-      if (action === "diminuer") return Math.max(1, prev - 1);
-      if (action === "reset") return 1;
-    });
-  };
-
   const sousTotal = plat.prix * quantite;
   const total = sousTotal + fraisLivraison;
 
   const handleCommander = () => {
     const panierData = { plat, quantite, sousTotal, total, fraisLivraison };
-    localStorage.setItem("panier", JSON.stringify(panierData)); // ✅ pour Paiement
+    localStorage.setItem("panier", JSON.stringify(panierData));
 
     if (user) {
       navigate("/Paiement", { state: panierData });
     } else {
-      navigate("/profil", {
-        state: {
-          from: "/Paiement",
-        },
-      });
+      navigate("/profil", { state: { from: "/Paiement" } });
     }
   };
 
@@ -139,7 +136,7 @@ export default function Panier() {
         <Button
           fullWidth
           variant="contained"
-          onClick={handleCommander} // ✅
+          onClick={handleCommander}
           sx={{
             mt: 3,
             backgroundColor: "#F97316",

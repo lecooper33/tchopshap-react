@@ -19,11 +19,17 @@ function RestaurantUpload() {
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const userId = parseInt(localStorage.getItem("userId")); // ✅ Converti en nombre
+
   useEffect(() => {
     axios.get("https://tchopshap.onrender.com/restaurant")
-      .then(res => setRestaurants(res.data))
-      .catch(err => console.error(err));
-  }, []);
+      .then(res => {
+        const allRestaurants = res.data;
+        const userRestaurants = allRestaurants.filter(r => r.idUtilisateur === userId); // ✅ Clé corrigée
+        setRestaurants(userRestaurants);
+      })
+      .catch(err => console.error("❌ Erreur de récupération des restaurants :", err));
+  }, [userId]);
 
   const handleDelete = async (id) => {
     try {
@@ -67,7 +73,9 @@ function RestaurantUpload() {
       };
 
       await axios.put(`https://tchopshap.onrender.com/restaurant/${currentRestaurant.idRestaurant}`, updatedRestaurant);
-      setRestaurants(restaurants.map(r => (r.idRestaurant === currentRestaurant.idRestaurant ? updatedRestaurant : r)));
+      setRestaurants(restaurants.map(r =>
+        r.idRestaurant === currentRestaurant.idRestaurant ? updatedRestaurant : r
+      ));
       setOpen(false);
     } catch (error) {
       console.error(error);
@@ -89,55 +97,61 @@ function RestaurantUpload() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>Liste des Restaurants</Typography>
+      <Typography variant="h5" gutterBottom>Liste de mes Restaurants</Typography>
 
-      <Box
-        sx={{
-          display: "grid",
-          gap: 3,
-          gridTemplateColumns: {
-            xs: "repeat(1, 1fr)",
-            sm: "repeat(2, 1fr)",
-            md: "repeat(3, 1fr)",
-            lg: "repeat(4, 1fr)"
-          }
-        }}
-      >
-        {restaurants.slice(0, visibleCount).map((restaurant) => (
-          <motion.div
-            key={restaurant.idRestaurant}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+      {restaurants.length === 0 ? (
+        <Typography color="text.secondary">Aucun restaurant trouvé pour cet utilisateur.</Typography>
+      ) : (
+        <>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 3,
+              gridTemplateColumns: {
+                xs: "repeat(1, 1fr)",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+                lg: "repeat(4, 1fr)"
+              }
+            }}
           >
-            <Card>
-              <CardMedia
-                component="img"
-                height="180"
-                image={restaurant.image || "https://via.placeholder.com/300x180?text=Pas+d'image"}
-                alt={restaurant.nom}
-              />
-              <CardContent>
-                <Typography variant="h6">{restaurant.nom}</Typography>
-                <Typography color="text.secondary">{restaurant.adresse}</Typography>
-              </CardContent>
-              <CardActions>
-                <IconButton onClick={() => handleEdit(restaurant)}><EditIcon /></IconButton>
-                <IconButton onClick={() => handleDelete(restaurant.idRestaurant)}><DeleteIcon color="error" /></IconButton>
-              </CardActions>
-            </Card>
-          </motion.div>
-        ))}
-      </Box>
+            {restaurants.slice(0, visibleCount).map((restaurant) => (
+              <motion.div
+                key={restaurant.idRestaurant}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card>
+                  <CardMedia
+                    component="img"
+                    height="180"
+                    image={restaurant.image || "https://via.placeholder.com/300x180?text=Pas+d'image"}
+                    alt={restaurant.nom}
+                  />
+                  <CardContent>
+                    <Typography variant="h6">{restaurant.nom}</Typography>
+                    <Typography color="text.secondary">{restaurant.adresse}</Typography>
+                  </CardContent>
+                  <CardActions>
+                    <IconButton onClick={() => handleEdit(restaurant)}><EditIcon /></IconButton>
+                    <IconButton onClick={() => handleDelete(restaurant.idRestaurant)}><DeleteIcon color="error" /></IconButton>
+                  </CardActions>
+                </Card>
+              </motion.div>
+            ))}
+          </Box>
 
-      {/* Boutons Voir plus / Voir moins */}
-      <Box mt={4} textAlign="center">
-        {visibleCount < restaurants.length ? (
-          <Button variant="outlined" onClick={handleVoirPlus}>Voir plus</Button>
-        ) : restaurants.length > 4 ? (
-          <Button variant="outlined" onClick={handleVoirMoins}>Voir moins</Button>
-        ) : null}
-      </Box>
+          {/* Boutons Voir plus / Voir moins */}
+          <Box mt={4} textAlign="center">
+            {visibleCount < restaurants.length ? (
+              <Button variant="outlined" onClick={handleVoirPlus}>Voir plus</Button>
+            ) : restaurants.length > 4 ? (
+              <Button variant="outlined" onClick={handleVoirMoins}>Voir moins</Button>
+            ) : null}
+          </Box>
+        </>
+      )}
 
       {/* Dialog modification */}
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
@@ -185,3 +199,4 @@ function RestaurantUpload() {
 }
 
 export default RestaurantUpload;
+

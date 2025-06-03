@@ -51,8 +51,9 @@ export default function AdminLayout({ children }) {
         .get(`https://tchopshap.onrender.com/utilisateurs/${userId}`)
         .then((res) => {
           const user = res.data;
+           localStorage.setItem("userId", res.data.idUtilisateur);
           setAdminName(user.nom);
-          setAdminImage(user.image);
+          setAdminImage(user.image); // ou le champ correct de ton API
         })
         .catch((err) => {
           console.error("Erreur lors de la récupération de l'admin :", err);
@@ -62,7 +63,6 @@ export default function AdminLayout({ children }) {
 
   const toggleDrawer = () => setMobileOpen(!mobileOpen);
   const toggleCollapse = () => setCollapsed(!collapsed);
-
   const drawerContent = (
     <div>
       <Toolbar sx={{ justifyContent: collapsed ? "center" : "flex-start" }}>

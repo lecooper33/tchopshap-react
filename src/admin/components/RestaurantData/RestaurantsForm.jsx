@@ -12,12 +12,13 @@ function RestaurantForm() {
     nom: '',
     adresse: '',
     idCategorie: '',
-    image: ''
+    image: '',
+    idUtilisateur: ''
   });
   const [categories, setCategories] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  // Cette section charge les catégories depuis l'API
+  // Chargement des catégories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -30,10 +31,28 @@ function RestaurantForm() {
     fetchCategories();
   }, []);
 
+  // Récupération de l'id utilisateur au chargement du composant
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    console.log("ID utilisateur récupéré du localStorage:", userId);
+    setFormData(prev => ({
+      ...prev,
+      idUtilisateur: userId
+    }));
+  }, []);
+
   const handleOpen = () => setOpen(true);
+
   const handleClose = () => {
+    const userId = localStorage.getItem("userId");
     setOpen(false);
-    setFormData({ nom: '', adresse: '', idCategorie: '', image: '' });
+    setFormData({
+      nom: '',
+      adresse: '',
+      idCategorie: '',
+      image: '',
+      idUtilisateur: userId
+    });
   };
 
   const handleChange = (e) => {
@@ -44,7 +63,6 @@ function RestaurantForm() {
     }));
   };
 
-  // Cette section permet d'heberger les images sur cloudinary
   const handleImageUpload = async (acceptedFiles) => {
     setUploading(true);
     const file = acceptedFiles[0];
@@ -58,6 +76,7 @@ function RestaurantForm() {
         `https://api.cloudinary.com/v1_1/dwhqa7huy/image/upload`,
         form
       );
+      console.log("Image upload response:", response.data);
       setFormData(prev => ({
         ...prev,
         image: response.data.secure_url
@@ -69,16 +88,18 @@ function RestaurantForm() {
     }
   };
 
-  // Cette section permet la creation d'un nouveau restaurant
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Données envoyées :", formData); // 
+
     try {
       const response = await axios.post("https://tchopshap.onrender.com/restaurant", formData);
+      console.log("Réponse complète du serveur :", response); // 
       console.log("Restaurant ajouté avec succès:", response.data);
+      console.log("Response",response.data.userId)
       handleClose();
     } catch (error) {
-      console.error("Erreur lors de l'ajout du restaurant:", error);
-      console.log("reponse");
+      console.error("Erreur lors de l'ajout du restaurant:", error.response || error);
     }
   };
 
@@ -90,77 +111,88 @@ function RestaurantForm() {
 
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Ajouter un nouveau restaurant</DialogTitle>
-        <DialogContent>
-          <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              name="nom"
-              label="Nom du restaurant"
-              value={formData.nom}
-              onChange={handleChange}
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              name="adresse"
-              label="Adresse"
-              value={formData.adresse}
-              onChange={handleChange}
-              margin="normal"
-              required
-            />
+       <DialogContent>
+  <form onSubmit={handleSubmit}>
+    <TextField
+      fullWidth
+      select
+      name="idCategorie"
+      label="Catégorie"
+      value={formData.idCategorie}
+      onChange={handleChange}
+      margin="normal"
+      required
+    >
+      {categories.map((cat) => (
+        <MenuItem key={cat.idCategorie} value={cat.idCategorie}>
+          {cat.categorie}
+        </MenuItem>
+      ))}
+    </TextField>
 
-            <TextField
-              fullWidth
-              select
-              name="idCategorie"
-              label="Catégorie"
-              value={formData.idCategorie}
-              onChange={handleChange}
-              margin="normal"
-              required
-            >
-              {categories.map((cat) => (
-                <MenuItem key={cat.idCategorie} value={cat.idCategorie}>
-                  {cat.categorie}
-                </MenuItem>
-              ))}
-            </TextField>
+    <TextField
+      fullWidth
+      name="nom"
+      label="Nom du restaurant"
+      value={formData.nom}
+      onChange={handleChange}
+      margin="normal"
+      required
+    />
 
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Dropzone onDrop={handleImageUpload}>
-                {({ getRootProps, getInputProps }) => (
-                  <Box
-                    {...getRootProps()}
-                    sx={{
-                      border: '2px dashed #ccc',
-                      borderRadius: 2,
-                      p: 2,
-                      textAlign: 'center',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <input {...getInputProps()} />
-                    {uploading ? (
-                      <Typography>Téléchargement en cours...</Typography>
-                    ) : formData.image ? (
-                      <img
-                        src={formData.image}
-                        alt="Aperçu"
-                        style={{ maxWidth: '200px', maxHeight: '200px' }}
-                      />
-                    ) : (
-                      <Typography>
-                        Glissez une image ici ou cliquez pour sélectionner
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-              </Dropzone>
-            </Box>
-          </form>
-        </DialogContent>
+    <TextField
+      fullWidth
+      name="adresse"
+      label="Adresse"
+      value={formData.adresse}
+      onChange={handleChange}
+      margin="normal"
+      required
+    />
+
+    <Box sx={{ mt: 2, mb: 2 }}>
+      <Dropzone onDrop={handleImageUpload}>
+        {({ getRootProps, getInputProps }) => (
+          <Box
+            {...getRootProps()}
+            sx={{
+              border: '2px dashed #ccc',
+              borderRadius: 2,
+              p: 2,
+              textAlign: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <input {...getInputProps()} />
+            {uploading ? (
+              <Typography>Téléchargement en cours...</Typography>
+            ) : formData.image ? (
+              <img
+                src={formData.image}
+                alt="Aperçu"
+                style={{ maxWidth: '200px', maxHeight: '200px' }}
+              />
+            ) : (
+              <Typography>
+                Glissez une image ici ou cliquez pour sélectionner
+              </Typography>
+            )}
+          </Box>
+        )}
+      </Dropzone>
+    </Box>
+
+    <TextField
+      fullWidth
+      name="idUtilisateur"
+      label="ID Utilisateur"
+      value={formData.idUtilisateur}
+      margin="normal"
+      InputProps={{ readOnly: true }}
+    />
+  </form>
+</DialogContent>
+
         <DialogActions>
           <Button onClick={handleClose} color="secondary">
             Annuler
@@ -180,3 +212,4 @@ function RestaurantForm() {
 }
 
 export default RestaurantForm;
+
