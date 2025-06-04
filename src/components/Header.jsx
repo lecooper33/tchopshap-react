@@ -28,7 +28,7 @@ const Header = () => {
   const navItems = [
     { text: "Accueil", to: "/", icon: <HomeIcon sx={{ color: "orange", mr: 2 }} /> },
     { text: "Restaurants", to: "/restaurants", icon: <RestaurantIcon sx={{ color: "orange", mr: 2 }} /> },
-    { text: "Plats", to: "/RestaurantsDetail", icon: <FastfoodIcon sx={{ color: "orange", mr: 2 }} /> },
+    { text: "Plats", to: "/platcard", icon: <FastfoodIcon sx={{ color: "orange", mr: 2 }} /> },
   ];
 
   return (
@@ -105,9 +105,9 @@ const Header = () => {
                 color="inherit"
                 state={{from:location.pathname}}
                 startIcon={<PersonOutlineIcon />}
-                sx={{ textTransform: "none" }}
+                sx={{ textTransform: "none", backgroundColor:"orange", color:"white" }}
               >
-                Connexion
+                Se Connecter
               </Button>
             )
           )}

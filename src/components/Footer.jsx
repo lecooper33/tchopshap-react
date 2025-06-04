@@ -55,7 +55,7 @@ function Footer() {
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Plats
               </Link>
-              <Link href="Login" underline="none" color="inherit" variant="body2"
+              <Link href="/Login" underline="none" color="inherit" variant="body2"
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Inscription
               </Link>
@@ -77,7 +77,7 @@ function Footer() {
               <LocationOnIcon sx={{ color: 'orange', mr: 1 }} />
               <Typography variant="body2">
                 123 Avenue de la République,<br />
-                75011 Paris
+                75011 Port-gentil
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>

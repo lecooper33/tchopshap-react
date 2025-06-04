@@ -53,7 +53,9 @@ export default function AdminLayout({ children }) {
           const user = res.data;
            localStorage.setItem("userId", res.data.idUtilisateur);
           setAdminName(user.nom);
+          localStorage.setItem("adminName", user.nom);
           setAdminImage(user.image); // ou le champ correct de ton API
+          localStorage.setItem("adminImage", user.image);
         })
         .catch((err) => {
           console.error("Erreur lors de la récupération de l'admin :", err);
