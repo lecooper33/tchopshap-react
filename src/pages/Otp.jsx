@@ -1,114 +1,150 @@
 import React, { useState, useEffect } from 'react';
+import { Box, Button, Paper, TextField, Snackbar, Alert, Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import {
-  Container,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Alert,
-  Paper,
-  CircularProgress
-} from '@mui/material';
 
-function Otp() {
-  const [otp, setOtp] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [chargement, setChargement] = useState(false);
-
+export default function Otp() {
+  const [otp, setOtp] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Retrieve email from location state, or an empty string if not provided
   const email = location.state?.email || '';
-  const role = location.state?.role || 'client';
 
   useEffect(() => {
+    // If email is not provided via navigation state, display a message
     if (!email) {
-      setMessage("Email non fourni. Veuillez vous inscrire d'abord.");
-      setTimeout(() => {
-        navigate('/signup');
-      }, 2000);
+      showSnackbar('Email non fourni. Veuillez vous inscrire ou vous connecter d\'abord.', 'info');
+      // Optionally, you might want to redirect the user if no email is present
+      // navigate('/register'); // Example redirect
     }
-  }, [email, navigate]);
+  }, [email, navigate]); // Depend on email and navigate to avoid re-running unnecessarily
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    setError('');
-    setChargement(true);
+  // Function to show the snackbar messages
+  const showSnackbar = (message, severity = "info") => {
+    setSnackbar({ open: true, message, severity });
+  };
 
+  // Handle the OTP verification submission
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault(); // Prevent default form submission behavior
+
+    // Basic validation before making the API call
     if (!email) {
-      setError("L'email est requis pour la vérification OTP.");
-      setChargement(false);
+      showSnackbar('L\'email est requis pour la vérification OTP.', 'error');
+      return;
+    }
+    if (!otp || otp.trim().length === 0) {
+      showSnackbar('Veuillez entrer le code OTP.', 'error');
       return;
     }
 
     try {
-      const response = await axios.post('https://tchopshap.onrender.com/verifier-otp', {
-        email,
-        otp,
+      // Make a POST request to the OTP verification endpoint
+      const response = await fetch('https://tchopshap.onrender.com/verifier-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp: otp.trim() }), // Send trimmed OTP
       });
-      console.log('Réponse API verifier-otp:', response.data);
-      setMessage(`Compte vérifié. Redirection vers ${role === 'administrateur' ? 'le tableau de bord admin' : 'l’accueil'}...`);
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('userRole', response.data.role);
 
-      // 
-      setTimeout(() => {
-        navigate(role === 'administrateur' ? '/admin' : '/');
-      }, 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || "Erreur lors de la vérification OTP.");
-    } finally {
-      setChargement(false);
+      const data = await response.json(); // Parse the JSON response
+
+      if (response.ok) {
+        // On successful verification
+        showSnackbar(data.message || "OTP vérifié avec succès !", "success");
+        // Store JWT token and user role in localStorage for future use
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.role);
+
+        // Navigate based on the user's role after a short delay for snackbar visibility
+        setTimeout(() => {
+          if (data.role === "administrateur") {
+            navigate("/admin");
+          } else {
+            navigate("/"); // Or a default user dashboard
+          }
+        }, 2000); // 2-second delay
+      } else {
+        // On verification failure (e.g., incorrect OTP, expired OTP)
+        showSnackbar(data.message || 'Erreur lors de la vérification OTP.', "error");
+      }
+    } catch (error) {
+      // Handle network errors or other unexpected issues
+      console.error("Erreur de vérification OTP ou réseau :", error);
+      showSnackbar('Problème de connexion au serveur. Veuillez réessayer plus tard.', 'error');
     }
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" gutterBottom align="center">
-          Entrez votre code OTP pour vérification
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
+      sx={{ p: 2, backgroundColor: '#f0f2f5' }} // Added a light background color
+    >
+      <Paper elevation={6} sx={{ padding: 5, width: 400, borderRadius: 2 }}> {/* Increased padding, elevated paper, rounded corners */}
+        <Typography variant="h5" component="h2" gutterBottom align="center" sx={{ mb: 3, color: '#333' }}>
+          Vérification OTP
         </Typography>
 
-        {email && (
-          <Typography variant="body1" gutterBottom>
-            Un code OTP a été envoyé à : <strong>{email}</strong>
+        {email ? (
+          <Typography variant="body1" align="center" sx={{ mb: 3, color: '#555' }}>
+            Un code OTP a été envoyé à : <Typography component="span" fontWeight="bold">{email}</Typography>
+          </Typography>
+        ) : (
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+            Veuillez entrer l'email pour recevoir le code OTP.
           </Typography>
         )}
 
-        {message && <Alert severity="success" sx={{ mt: 2 }}>{message}</Alert>}
-        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
-          <Typography>Code OTP</Typography>
+        <form onSubmit={handleVerifyOtp}>
           <TextField
-            placeholder='Code OTP à 4 chiffres'
-            type="text"
+            label="Code OTP"
             fullWidth
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            inputProps={{ maxLength: 4 }}
+            margin="normal"
+            variant="outlined" // Added outlined variant for better visual
+            inputProps={{ maxLength: 4 }} // Assuming a 4-digit OTP
             required
+            sx={{ mb: 2 }} // Margin bottom
           />
-
           <Button
-            type="submit"
+            type="submit" // Set type to submit for form handling
             variant="contained"
             fullWidth
-            sx={{ mt: 3, bgcolor: 'orange' }}
-            disabled={chargement}
+            sx={{
+              py: 1.5, // Padding vertical
+              backgroundColor: '#1976d2', // Primary color
+              '&:hover': {
+                backgroundColor: '#115293', // Darker on hover
+              },
+              borderRadius: 1, // Slightly rounded buttons
+            }}
           >
-            {chargement ? (
-              <CircularProgress size={24} sx={{ color: "white" }} />
-            ) : ("Vérifier")}
+            Vérifier
           </Button>
-        </Box>
+        </form>
       </Paper>
-    </Container>
+
+      {/* Snackbar for visual feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
-
-export default Otp;

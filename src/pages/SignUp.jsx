@@ -1,140 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  TextField,
-  Button,
-  MenuItem,
-  Snackbar,
-  Alert,
-  Typography,
-  Box,
-  Paper,
-  CircularProgress
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-function SignUp() {
-  const [nom, setNom] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('client');
-  const [loading, setLoading] = useState(false);
-  const [snack, setSnack] = useState({ open: false, message: '', severity: 'info' });
+  Box, Button, Paper, TextField, Typography,
+  Radio, RadioGroup, FormControlLabel, FormLabel,
+  Snackbar, Alert, IconButton, InputAdornment
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
+function SignUp() {
+  const [formData, setFormData] = useState({
+    nom: "",
+    email: "",
+    password: "",
+    role: "client", // Default role
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const { nom, email, password, role } = formData;
+
+    if (!nom || !email || !password || !role) {
+      return setSnackbar({ open: true, message: "❌ Tous les champs sont obligatoires.", severity: "error" });
+    }
+
+    if (password.length < 6) {
+      return setSnackbar({ open: true, message: "❌ Le mot de passe doit contenir au moins 6 caractères.", severity: "error" });
+    }
+
     setLoading(true);
 
     try {
-      const response = await axios.post('https://tchopshap.onrender.com/inscription', {
+      const res = await axios.post("https://tchopshap.onrender.com/inscription", {
         nom,
-        email,
-        password,
-        role,
+        email: email.trim(),
+        password: password.trim(),
+        role
       });
 
-      const data = response.data;
-      setSnack({ open: true, message: data.message, severity: 'success' });
-
-      if (data.requiresOtpVerification) {
-        setTimeout(() => {
-          navigate('/otp', { state: { email, role } });
-        }, 2000);
+      // Assuming the backend sends a success message or token on success
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
       }
-    } catch (error) {
-      const errMsg = error.response?.data?.message || "Erreur lors de l'inscription.";
-      setSnack({ open: true, message: errMsg, severity: 'error' });
+      
+      // Always store the user's email
+      localStorage.setItem("emailUtilisateur", email.trim());
+      console.log("Email enregistré dans localStorage :", email.trim());
+
+      setSnackbar({
+        open: true,
+        message: "✅ Inscription réussie ! Un code OTP a été envoyé à votre e-mail.",
+        severity: "success"
+      });
+
+      setFormData({ nom: "", email: "", password: "", role: "client" }); // Reset form
+
+      setTimeout(() => {
+        navigate("/otp", { state: { email: email.trim() } });
+      }, 2000);
+
+    } catch (err) {
+      const message = err?.response?.data?.message || "❌ Une erreur est survenue lors de l'inscription.";
+      setSnackbar({ open: true, message, severity: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCloseSnack = () => {
-    setSnack({ ...snack, open: false });
-  };
-
   return (
-    <div>
-      <Header/>
-  
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#f4f6f8' }}>
-      <Paper elevation={3} sx={{ p: 4, width: '100%', maxWidth: 450 }}>
-        <Typography variant="h5" align="center" gutterBottom>
-          Créez votre compte
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Paper elevation={3} sx={{ p: 4, width: 400 }}>
+        <Typography variant="h4" fontWeight="bold" textAlign="center" gutterBottom>
+          Inscription
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
+            name="nom"
             label="Nom"
-            variant="outlined"
             fullWidth
-            margin="normal"
-            value={nom}
-            onChange={(e) => setNom(e.target.value)}
+            sx={{ mb: 2 }}
+            value={formData.nom}
+            onChange={handleChange}
             required
           />
           <TextField
-            label="Email"
+            name="email"
+            label="E-mail"
             type="email"
-            variant="outlined"
             fullWidth
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            sx={{ mb: 2 }}
+            value={formData.email}
+            onChange={handleChange}
             required
           />
           <TextField
+            name="password"
             label="Mot de passe"
-            type="password"
-            variant="outlined"
+            type={showPassword ? "text" : "password"}
             fullWidth
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            sx={{ mb: 2 }}
+            value={formData.password}
+            onChange={handleChange}
             required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
           />
-          <TextField
-            select
-            label="Rôle"
-            fullWidth
-            margin="normal"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <MenuItem value="client">Client</MenuItem>
-            <MenuItem value="administrateur">Administrateur</MenuItem>
-          </TextField>
+          <FormLabel component="legend" sx={{ mt: 2 }}>Quel est votre rôle ?</FormLabel>
+          <RadioGroup row name="role" value={formData.role} onChange={handleChange}>
+            <FormControlLabel value="client" control={<Radio />} label="Client" />
+            <FormControlLabel value="administrateur" control={<Radio />} label="Administrateur" />
+          </RadioGroup>
 
-          <Button 
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            disabled={loading}
-            sx={{ mt: 2, py: 1.5, backgroundColor:"orange" }}
-          >
-            {loading ? <CircularProgress size={24} color="orange" /> : "S'inscrire"}
-          </Button>
+          <Box display="flex" justifyContent="center" sx={{ mt: 3 }}>
+            <Button type="submit" variant="contained" sx={{ backgroundColor: "orange" }} disabled={loading}>
+              {loading ? "En cours..." : "Créer un compte"}
+            </Button>
+          </Box>
         </form>
       </Paper>
 
       <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={handleCloseSnack}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseSnack} severity={snack.severity} sx={{ width: '100%' }}>
-          {snack.message}
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </Box>
-    <Footer/>
-      </div>
   );
 }
 
 export default SignUp;
-

@@ -10,7 +10,7 @@ import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
   Restaurant as RestaurantIcon,
-  ShoppingCart as ShoppingCartIcon,
+ 
 } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -21,7 +21,7 @@ const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin" },
   { text: "Client", icon: <PeopleIcon />, path: "/admin/client" },
   { text: "Plats", icon: <RestaurantIcon />, path: "/admin/plats" },
-  { text: "Commandes", icon: <ShoppingCartIcon />, path: "/admin/commandes" },
+  { text: "Commandes", path: "/admin/commandes" },
   { text: "Restaurants", icon: <RestaurantIcon />, path: "/admin/restaurants" },
 ];
 
@@ -31,40 +31,52 @@ export default function AdminLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Ajout d'un état pour stocker l'utilisateur
-  const [adminName, setAdminName] = useState("");
-  const [adminImage, setAdminImage] = useState(null);
+  // Initialisation des états avec les valeurs du localStorage
+  const [adminName, setAdminName] = useState(localStorage.getItem("adminName") || "");
+  const [adminImage, setAdminImage] = useState(localStorage.getItem("adminImage") || null);
 
-  //  Fonction de déconnexion maintenant à l'intérieur
+  // Fonction de déconnexion
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("adminName"); // Supprimer aussi le nom de l'admin
+    localStorage.removeItem("adminImage"); // Supprimer aussi l'image de l'admin
     navigate("/admin/login");
   };
 
-  // Chargement du nom de l'admin
+  // Chargement du nom et de l'image de l'admin lors du montage du composant
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    if (userId) {
+    // Vérifier si le token existe, sinon rediriger vers la page de connexion
+    const token = localStorage.getItem("token");
+    if (!token) {
+        navigate("/admin/login");
+        return; // Arrêter l'exécution si pas de token
+    }
+
+    if (userId && !adminName) { // Charger les données seulement si userId existe et adminName n'est pas déjà chargé
       axios
         .get(`https://tchopshap.onrender.com/utilisateurs/${userId}`)
         .then((res) => {
           const user = res.data;
-           localStorage.setItem("userId", res.data.idUtilisateur);
+          // Mise à jour de l'état et du localStorage
           setAdminName(user.nom);
           localStorage.setItem("adminName", user.nom);
-          setAdminImage(user.image); // ou le champ correct de ton API
+          setAdminImage(user.image);
           localStorage.setItem("adminImage", user.image);
         })
         .catch((err) => {
           console.error("Erreur lors de la récupération de l'admin :", err);
+          // Gérer l'erreur, par exemple en déconnectant l'utilisateur
+          handleLogout();
         });
     }
-  }, []);
+  }, [adminName, navigate]); // Dépendance à adminName pour éviter les boucles infinies et navigate pour les redirections
 
   const toggleDrawer = () => setMobileOpen(!mobileOpen);
   const toggleCollapse = () => setCollapsed(!collapsed);
+
   const drawerContent = (
     <div>
       <Toolbar sx={{ justifyContent: collapsed ? "center" : "flex-start" }}>
@@ -179,7 +191,7 @@ export default function AdminLayout({ children }) {
               variant="contained"
               sx={{ border: "1px solid white" }}
             >
-              Se deconnecter
+              Se déconnecter
             </Button>
           </Box>
         </Toolbar>
