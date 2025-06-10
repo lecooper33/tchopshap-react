@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react"; // Import useCallback
 import axios from "axios";
 import {
   AppBar, Box, CssBaseline, Drawer, IconButton, List, ListItem,
@@ -10,7 +10,8 @@ import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
   Restaurant as RestaurantIcon,
- 
+  ShoppingCart as ShoppingCartIcon,
+  Store as StoreIcon,
 } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -21,8 +22,8 @@ const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin" },
   { text: "Client", icon: <PeopleIcon />, path: "/admin/client" },
   { text: "Plats", icon: <RestaurantIcon />, path: "/admin/plats" },
-  { text: "Commandes", path: "/admin/commandes" },
-  { text: "Restaurants", icon: <RestaurantIcon />, path: "/admin/restaurants" },
+  { text: "Commandes", icon: <ShoppingCartIcon />, path: "/admin/commandes" },
+  { text: "Restaurants", icon: <StoreIcon />, path: "/admin/restaurants" },
 ];
 
 export default function AdminLayout({ children }) {
@@ -31,48 +32,57 @@ export default function AdminLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Initialisation des états avec les valeurs du localStorage
-  const [adminName, setAdminName] = useState(localStorage.getItem("adminName") || "");
-  const [adminImage, setAdminImage] = useState(localStorage.getItem("adminImage") || null);
+  const [adminName, setAdminName] = useState(() => localStorage.getItem("adminName") || null);
+  const [adminImage, setAdminImage] = useState(() => localStorage.getItem("adminImage") || null);
 
-  // Fonction de déconnexion
-  const handleLogout = () => {
+  // ---
+  // Correction: Use useCallback for handleLogout
+  // This memoizes the function, ensuring its reference is stable across renders
+  // unless its own dependencies (like 'navigate') change.
+  // ---
+  const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
-    localStorage.removeItem("adminName"); // Supprimer aussi le nom de l'admin
-    localStorage.removeItem("adminImage"); // Supprimer aussi l'image de l'admin
+    localStorage.removeItem("adminName");
+    localStorage.removeItem("adminImage");
     navigate("/admin/login");
-  };
+  }, [navigate]); // 'navigate' is a dependency of handleLogout
 
-  // Chargement du nom et de l'image de l'admin lors du montage du composant
+  // ---
+  // Correction: Add handleLogout to useEffect dependencies
+  // Now that handleLogout is memoized with useCallback, it's safe to add it
+  // to the useEffect's dependency array.
+  // ---
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    // Vérifier si le token existe, sinon rediriger vers la page de connexion
     const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+
     if (!token) {
-        navigate("/admin/login");
-        return; // Arrêter l'exécution si pas de token
+      handleLogout(); // Calling the memoized handleLogout
+      return;
     }
 
-    if (userId && !adminName) { // Charger les données seulement si userId existe et adminName n'est pas déjà chargé
+    if (userId && (!adminName || !adminImage)) {
       axios
-        .get(`https://tchopshap.onrender.com/utilisateurs/${userId}`)
+        .get(`https://tchopshap.onrender.com/utilisateurs/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
         .then((res) => {
           const user = res.data;
-          // Mise à jour de l'état et du localStorage
           setAdminName(user.nom);
           localStorage.setItem("adminName", user.nom);
           setAdminImage(user.image);
           localStorage.setItem("adminImage", user.image);
         })
         .catch((err) => {
-          console.error("Erreur lors de la récupération de l'admin :", err);
-          // Gérer l'erreur, par exemple en déconnectant l'utilisateur
+          console.error("Error fetching admin data:", err);
           handleLogout();
         });
     }
-  }, [adminName, navigate]); // Dépendance à adminName pour éviter les boucles infinies et navigate pour les redirections
+  }, [adminName, adminImage, navigate, handleLogout]); // handleLogout is now a dependency
 
   const toggleDrawer = () => setMobileOpen(!mobileOpen);
   const toggleCollapse = () => setCollapsed(!collapsed);
@@ -93,7 +103,6 @@ export default function AdminLayout({ children }) {
         {menuItems.map((item) => (
           <Tooltip key={item.text} title={collapsed ? item.text : ""} placement="right">
             <ListItem
-              button={true}
               component={Link}
               to={item.path}
               selected={location.pathname === item.path}
@@ -105,6 +114,9 @@ export default function AdminLayout({ children }) {
                   backgroundColor: "orange",
                   color: "#fff",
                   fontWeight: "bold",
+                  "& .MuiListItemIcon-root": {
+                    color: "#fff",
+                  },
                 },
                 "&:hover": {
                   backgroundColor: "#ffe0b2",
@@ -113,7 +125,7 @@ export default function AdminLayout({ children }) {
             >
               <ListItemIcon
                 sx={{
-                  color: "#000",
+                  color: "inherit",
                   minWidth: 0,
                   mr: collapsed ? 0 : 2,
                   justifyContent: "center",
@@ -126,7 +138,7 @@ export default function AdminLayout({ children }) {
                   primary={item.text}
                   primaryTypographyProps={{
                     fontWeight: 500,
-                    color: "#000",
+                    color: "inherit",
                   }}
                 />
               )}
@@ -157,7 +169,7 @@ export default function AdminLayout({ children }) {
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Box display="flex" alignItems="center" gap={1}>
-            {/* Bouton mobile */}
+            {/* Mobile menu toggle button */}
             <IconButton
               color="inherit"
               edge="start"
@@ -167,7 +179,7 @@ export default function AdminLayout({ children }) {
               <MenuIcon />
             </IconButton>
 
-            {/* Bouton pour replier/étendre */}
+            {/* Desktop drawer collapse toggle button */}
             <IconButton
               color="inherit"
               edge="start"
@@ -178,18 +190,18 @@ export default function AdminLayout({ children }) {
             </IconButton>
           </Box>
 
-          <Box display={'flex'} gap={2}>
+          <Box display={'flex'} gap={2} alignItems="center">
             <Box display="flex" alignItems="center" gap={1}>
               <Typography fontWeight="bold" textTransform="capitalize">
                 {adminName || "Admin"}
               </Typography>
-              <Avatar src={adminImage || "https://i.pravatar.cc/150?img=1"} />
+              <Avatar src={adminImage || "https://i.pravatar.cc/150?img=1"} alt="Admin Avatar" />
             </Box>
 
             <Button
               onClick={handleLogout}
               variant="contained"
-              sx={{ border: "1px solid white" }}
+              sx={{ border: "1px solid white", color: "white", bgcolor: "transparent", '&:hover': { bgcolor: "rgba(255,255,255,0.2)" } }}
             >
               Se déconnecter
             </Button>
@@ -208,7 +220,7 @@ export default function AdminLayout({ children }) {
           transition: "width 0.5s ease"
         }}
       >
-        {/* Drawer mobile */}
+        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -217,7 +229,7 @@ export default function AdminLayout({ children }) {
           sx={{
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
-              width: "50vw",
+              width: "70vw",
               boxSizing: "border-box",
             },
           }}
@@ -225,7 +237,7 @@ export default function AdminLayout({ children }) {
           {drawerContent}
         </Drawer>
 
-        {/* Drawer desktop */}
+        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           open
@@ -243,7 +255,7 @@ export default function AdminLayout({ children }) {
         </Drawer>
       </Box>
 
-      {/* CONTENU */}
+      {/* MAIN CONTENT */}
       <Box
         component="main"
         sx={{
