@@ -10,20 +10,29 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem("user");
     try {
       if (storedUser && storedUser !== "undefined") {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        console.log("AuthContext: Utilisateur récupéré de localStorage:", parsedUser);
+        setUser(parsedUser);
+      } else {
+        console.log("AuthContext: Pas d'utilisateur dans localStorage ou 'undefined'.");
       }
     } catch (error) {
-      console.error("Erreur lors du parsing du user localStorage:", error);
-      localStorage.removeItem("user");
+      console.error("AuthContext: Erreur lors du parsing de l'utilisateur depuis localStorage:", error);
+      localStorage.removeItem("user"); // Supprime les données corrompues
+      setUser(null);
     }
   }, []);
 
   const login = (userData) => {
+    // userData doit contenir { id, nom, email, role, token }
     localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", userData.token); // Stocker le token séparément pour faciliter l'accès
+    console.log("AuthContext: Utilisateur connecté et stocké:", userData);
     setUser(userData);
   };
 
   const logout = () => {
+    console.log("AuthContext: Déconnexion de l'utilisateur.");
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
@@ -37,5 +46,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
 

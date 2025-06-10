@@ -1,35 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Paper, TextField, Snackbar, Alert, Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 export default function Otp() {
   const [otp, setOtp] = useState("");
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const location = useLocation();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  // Retrieve email from location state, or an empty string if not provided
   const email = location.state?.email || '';
+  const initialUserName = location.state?.nom || '';
+  const initialUserId = location.state?.userId || ''; // Récupère l'ID passé depuis SignUp
 
   useEffect(() => {
-    // If email is not provided via navigation state, display a message
     if (!email) {
       showSnackbar('Email non fourni. Veuillez vous inscrire ou vous connecter d\'abord.', 'info');
-      // Optionally, you might want to redirect the user if no email is present
-      // navigate('/register'); // Example redirect
     }
-  }, [email, navigate]); // Depend on email and navigate to avoid re-running unnecessarily
+  }, [email, navigate]);
 
-  // Function to show the snackbar messages
   const showSnackbar = (message, severity = "info") => {
     setSnackbar({ open: true, message, severity });
   };
 
-  // Handle the OTP verification submission
   const handleVerifyOtp = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault();
 
-    // Basic validation before making the API call
     if (!email) {
       showSnackbar('L\'email est requis pour la vérification OTP.', 'error');
       return;
@@ -40,40 +38,44 @@ export default function Otp() {
     }
 
     try {
-      // Make a POST request to the OTP verification endpoint
-      const response = await fetch('https://tchopshap.onrender.com/verifier-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, otp: otp.trim() }), // Send trimmed OTP
+      const response = await axios.post('https://tchopshap.onrender.com/verifier-otp', {
+        email,
+        otp: otp.trim()
       });
 
-      const data = await response.json(); // Parse the JSON response
+      const data = response.data;
 
-      if (response.ok) {
-        // On successful verification
+      console.log("OTP: Réponse de l'API /verifier-otp:", data);
+
+      if (response.status === 200) {
         showSnackbar(data.message || "OTP vérifié avec succès !", "success");
-        // Store JWT token and user role in localStorage for future use
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.role);
 
-        // Navigate based on the user's role after a short delay for snackbar visibility
+        // MODIFICATION CLÉ ICI :
+        // On utilise 'data.IdUtilisateur' car c'est le nom de la propriété renvoyée par l'API
+        const userData = {
+          token: data.token,
+          role: data.role,
+          id: data.IdUtilisateur || initialUserId, // <-- Changé de data.userId à data.IdUtilisateur
+          nom: data.nom || initialUserName, // Le nom est souvent déjà dans la réponse OTP, sinon on garde l'initial
+          email: email
+        };
+        
+        login(userData); // Connecte l'utilisateur via AuthContext
+
         setTimeout(() => {
           if (data.role === "administrateur") {
             navigate("/admin");
           } else {
-            navigate("/"); // Or a default user dashboard
+            navigate("/");
           }
-        }, 2000); // 2-second delay
+        }, 2000);
       } else {
-        // On verification failure (e.g., incorrect OTP, expired OTP)
         showSnackbar(data.message || 'Erreur lors de la vérification OTP.', "error");
       }
     } catch (error) {
-      // Handle network errors or other unexpected issues
-      console.error("Erreur de vérification OTP ou réseau :", error);
-      showSnackbar('Problème de connexion au serveur. Veuillez réessayer plus tard.', 'error');
+      console.error("OTP: Erreur de vérification OTP ou réseau :", error.response ? error.response.data : error.message);
+      const errorMessage = error.response?.data?.message || 'Problème de connexion au serveur. Veuillez réessayer plus tard.';
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -83,9 +85,9 @@ export default function Otp() {
       justifyContent="center"
       alignItems="center"
       minHeight="100vh"
-      sx={{ p: 2, backgroundColor: '#f0f2f5' }} // Added a light background color
+      sx={{ p: 2, backgroundColor: '#f0f2f5' }}
     >
-      <Paper elevation={6} sx={{ padding: 5, width: 400, borderRadius: 2 }}> {/* Increased padding, elevated paper, rounded corners */}
+      <Paper elevation={6} sx={{ padding: 5, width: 400, borderRadius: 2 }}>
         <Typography variant="h5" component="h2" gutterBottom align="center" sx={{ mb: 3, color: '#333' }}>
           Vérification OTP
         </Typography>
@@ -107,22 +109,22 @@ export default function Otp() {
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             margin="normal"
-            variant="outlined" // Added outlined variant for better visual
-            inputProps={{ maxLength: 4 }} // Assuming a 4-digit OTP
+            variant="outlined"
+            inputProps={{ maxLength: 4 }}
             required
-            sx={{ mb: 2 }} // Margin bottom
+            sx={{ mb: 2 }}
           />
           <Button
-            type="submit" // Set type to submit for form handling
+            type="submit"
             variant="contained"
             fullWidth
             sx={{
-              py: 1.5, // Padding vertical
-              backgroundColor: '#1976d2', // Primary color
+              py: 1.5,
+              backgroundColor: '#1976d2',
               '&:hover': {
-                backgroundColor: '#115293', // Darker on hover
+                backgroundColor: '#115293',
               },
-              borderRadius: 1, // Slightly rounded buttons
+              borderRadius: 1,
             }}
           >
             Vérifier
@@ -130,7 +132,6 @@ export default function Otp() {
         </form>
       </Paper>
 
-      {/* Snackbar for visual feedback */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

@@ -51,14 +51,10 @@ function SignUp() {
         role
       });
 
-      // Assuming the backend sends a success message or token on success
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
-      }
-      
-      // Always store the user's email
-      localStorage.setItem("emailUtilisateur", email.trim());
-      console.log("Email enregistré dans localStorage :", email.trim());
+      console.log("SignUp: Réponse de l'API /inscription:", res.data);
+      // Assurez-vous que votre backend renvoie `userId` ici.
+      // Par exemple: { message: "Inscription réussie...", userId: "un_id_unique", token: "..." }
+      const { idUtilisateur:userId } = res.data; // Récupère l'ID si le backend le fournit.
 
       setSnackbar({
         open: true,
@@ -66,13 +62,16 @@ function SignUp() {
         severity: "success"
       });
 
-      setFormData({ nom: "", email: "", password: "", role: "client" }); // Reset form
+      setFormData({ nom: "", email: "", password: "", role: "client" }); // Réinitialise le formulaire
 
       setTimeout(() => {
-        navigate("/otp", { state: { email: email.trim() } });
+        // Passe l'email, le nom et l'ID à la page OTP.
+        // L'ID est important si la page OTP ne le reçoit pas du backend.
+        navigate("/otp", { state: { email: email.trim(), nom: nom, userId: userId } });
       }, 2000);
 
     } catch (err) {
+      console.error("SignUp: Erreur lors de l'inscription:", err.response ? err.response.data : err.message);
       const message = err?.response?.data?.message || "❌ Une erreur est survenue lors de l'inscription.";
       setSnackbar({ open: true, message, severity: "error" });
     } finally {

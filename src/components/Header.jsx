@@ -12,7 +12,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { LuShoppingCart } from "react-icons/lu";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // ✅
+import { useAuth } from "../context/AuthContext"; // Assurez-vous que le chemin est correct
 
 const Header = () => {
   const location = useLocation();
@@ -21,7 +21,7 @@ const Header = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTabletOrMore = useMediaQuery(theme.breakpoints.up("sm"));
 
-  const { user, logout } = useAuth(); // ✅
+  const { user, logout } = useAuth(); // user contient maintenant { id, nom, email, role, token }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const toggleDrawer = () => setDrawerOpen(prev => !prev);
 
@@ -72,12 +72,12 @@ const Header = () => {
 
         {/* Actions */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {user ? (
+          {user ? ( // Si l'utilisateur est connecté (user est non-null)
             <>
             <Box display={'flex'} gap={1}>
               <Typography color="black" fontWeight={'bold'}>Bonjour</Typography>
               <Typography sx={{ fontWeight: 500, color: "#000" }}>
-                {user.nom}
+                {user.nom} {/* Affiche le nom de l'utilisateur */}
               </Typography>
             </Box>
               
@@ -188,4 +188,3 @@ const Header = () => {
 };
 
 export default Header;
-
