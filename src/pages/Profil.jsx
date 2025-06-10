@@ -1,10 +1,12 @@
-// src/pages/Profil.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import {
   Box, TextField, Button, Typography, Alert,
-  FormControlLabel, Checkbox
+  FormControlLabel, Checkbox,
+  InputAdornment, // Ajouté
+  IconButton,     // Ajouté
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material'; // Ajouté
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -15,9 +17,17 @@ function Profil() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Nouvel état
   const navigate = useNavigate();
   const { login } = useAuth(); // ✅
   const location = useLocation();
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show); // Nouvelle fonction
+
+  const handleMouseDownPassword = (event) => { // Nouvelle fonction
+    event.preventDefault();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -46,9 +56,9 @@ function Profil() {
           email: user.email,
         };
 
-        login(userData); //  Stocker dans le contexte
+        login(userData); //  Stocker dans le contexte
         setMessage(data.message);
-        
+
         const redirectPath = location.state?.from || (userData.role === "administrateur" ? "/admin" : "/")
         navigate(redirectPath);
       } else {
@@ -119,12 +129,27 @@ function Profil() {
           </Link>
         </Box>
 
+        {/* Champ mot de passe avec l'œil */}
         <TextField
           placeholder='Votre mot de passe'
-          type="password"
+          type={showPassword ? 'text' : 'password'} // Type dynamique
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          InputProps={{ // Ajouté InputProps
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowPassword}
+                  onMouseDown={handleMouseDownPassword}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
 
         <FormControlLabel

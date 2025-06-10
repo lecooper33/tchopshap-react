@@ -8,16 +8,25 @@ import {
   Alert,
   FormControlLabel,
   Checkbox,
+  InputAdornment, // Ajouté
+  IconButton,     // Ajouté
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material'; // Ajouté
 import { Link, useNavigate } from 'react-router-dom';
-
 
 function LoginAdmin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Nouvel état
   const navigate = useNavigate();
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show); // Nouvelle fonction
+
+  const handleMouseDownPassword = (event) => { // Nouvelle fonction
+    event.preventDefault();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +61,6 @@ function LoginAdmin() {
 
   return (
     <div>
-
       <Box
         component="form"
         onSubmit={handleSubmit}
@@ -76,11 +84,10 @@ function LoginAdmin() {
           Connectez-vous pour accéder à votre compte
         </Typography>
 
-
         {/* Champ Email */}
-          <Typography fontWeight="bold" sx={{ fontSize: '14px' }}>
-            Adresse e-mail
-          </Typography>
+        <Typography fontWeight="bold" sx={{ fontSize: '14px' }}>
+          Adresse e-mail
+        </Typography>
         <TextField
           placeholder='votre@email.com'
           type="email"
@@ -94,16 +101,29 @@ function LoginAdmin() {
           <Typography fontWeight="bold" sx={{ fontSize: '14px' }}>
             Mot de passe
           </Typography>
-          
         </Box>
 
-        {/* Champ mot de passe */}
+        {/* Champ mot de passe avec l'œil */}
         <TextField
           placeholder='Votre mot de passe'
-          type="password"
+          type={showPassword ? 'text' : 'password'} // Type dynamique
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          InputProps={{ // Ajouté InputProps
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowPassword}
+                  onMouseDown={handleMouseDownPassword}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
 
         {/* Checkbox se souvenir */}
@@ -136,7 +156,6 @@ function LoginAdmin() {
           </Link>
         </Typography>
       </Box>
- 
     </div>
   );
 }

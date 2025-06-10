@@ -7,6 +7,8 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 function SignUp() {
   const [formData, setFormData] = useState({
@@ -79,6 +81,8 @@ function SignUp() {
   };
 
   return (
+    <div>
+      <Header/>
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
       <Paper elevation={3} sx={{ p: 4, width: 400 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" gutterBottom>
@@ -148,6 +152,8 @@ function SignUp() {
         </Alert>
       </Snackbar>
     </Box>
+    <Footer/>
+    </div>
   );
 }
 
