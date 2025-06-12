@@ -83,7 +83,7 @@ function SignUp() {
     <div>
       <Header/>
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <Paper elevation={3} sx={{ p: 4, width: 400 }}>
+      <Paper elevation={3} sx={{ p: 4, width: 290, maxWidth: "100%", borderRadius: 2 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" gutterBottom>
           Inscription
         </Typography>
