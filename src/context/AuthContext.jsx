@@ -11,6 +11,12 @@ export const AuthProvider = ({ children }) => {
     try {
       if (storedUser && storedUser !== "undefined") {
         const parsedUser = JSON.parse(storedUser);
+        // Assurer la cohérence de l'ID utilisateur
+        if (parsedUser.userId && !parsedUser.id) {
+          parsedUser.id = parsedUser.userId;
+        } else if (parsedUser.idUtilisateur && !parsedUser.id) {
+          parsedUser.id = parsedUser.idUtilisateur;
+        }
         console.log("AuthContext: Utilisateur récupéré de localStorage:", parsedUser);
         setUser(parsedUser);
       } else {
@@ -18,17 +24,21 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("AuthContext: Erreur lors du parsing de l'utilisateur depuis localStorage:", error);
-      localStorage.removeItem("user"); // Supprime les données corrompues
+      localStorage.removeItem("user");
       setUser(null);
     }
   }, []);
 
   const login = (userData) => {
-    // userData doit contenir { id, nom, email, role, token }
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", userData.token); // Stocker le token séparément pour faciliter l'accès
-    console.log("AuthContext: Utilisateur connecté et stocké:", userData);
-    setUser(userData);
+    // Assurer la cohérence de l'ID utilisateur avant de stocker
+    const userToStore = {
+      ...userData,
+      id: userData.userId || userData.idUtilisateur || userData.id
+    };
+    console.log("AuthContext: Stockage de l'utilisateur avec ID unifié:", userToStore);
+    localStorage.setItem("user", JSON.stringify(userToStore));
+    localStorage.setItem("token", userToStore.token);
+    setUser(userToStore);
   };
 
   const logout = () => {

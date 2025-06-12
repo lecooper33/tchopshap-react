@@ -6,9 +6,7 @@ import {
   TextField,
   Typography,
   Checkbox,
-  Button,
-  Snackbar,
-  Alert
+  Button
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -18,38 +16,94 @@ import { useAuth } from "../context/AuthContext";
 export default function Facture() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { total = 0, sousTotal = 0, fraisLivraison = 0, idPlat } = location.state || {};
-  const { user } = useAuth(); // Récupération de l'utilisateur depuis le contexte
-  const idUtilisateur = user?.id; // Extraction de l'ID utilisateur depuis le contexte
+  const { user } = useAuth();
+  
+  // Récupération des données du state
+  const state = location.state || {};
+  const {
+    total = 0,
+    sousTotal = 0,
+    fraisLivraison = 0,
+    idPlat,
+    items = []
+  } = state;
+
+  // Vérification explicite de l'utilisateur et de son ID
+  useEffect(() => {
+    console.log("=== Vérification de l'authentification ===");
+    console.log("User object:", user);
+    console.log("User ID:", user?.id);
+    
+    if (!user) {
+      console.log("❌ Utilisateur non connecté, redirection vers la page de profil");
+      navigate("/profil", { state: { from: location.pathname } });
+    } else if (!user.id) {
+      console.log("❌ ID utilisateur manquant dans l'objet user");
+    } else {
+      console.log("✅ Utilisateur authentifié avec ID:", user.id);
+    }
+  }, [user, navigate, location.pathname]);
+
+  // Récupération de l'ID utilisateur du contexte d'authentification
+  const idUtilisateur = user?.id;
 
   const [modePaiement, setModePaiement] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-
   const [numeroMobile, setNumeroMobile] = useState("");
 
-  const panier = location.state || JSON.parse(localStorage.getItem("panier"));
-  const plat = panier?.plat;  const handleConfirm = async () => {
+  const handleConfirm = async () => {
+    // Vérification détaillée des informations requises
+    console.log("=== Vérification des informations ===");
+    console.log("modePaiement:", modePaiement);
+    console.log("idPlat:", idPlat);
+    console.log("idUtilisateur:", idUtilisateur);
+    console.log("user:", user);
+    console.log("location.state:", location.state);
+    console.log("items:", items);
+
     if (!user) {
       navigate("/profil", { state: { from: location.pathname } });
       return;
     }
-    
-    if (!modePaiement || !idPlat) {
-      setErrorMessage("Informations manquantes ou méthode de paiement non sélectionnée.");
-      setOpenSnackbar(true);
+
+    if (!modePaiement || !idPlat || !idUtilisateur) {
+      console.log("=== Détails des informations manquantes ===");
+      if (!modePaiement) console.log("❌ Mode de paiement non sélectionné");
+      if (!idPlat) console.log("❌ ID du plat manquant");
+      if (!idUtilisateur) console.log("❌ ID de l'utilisateur manquant");
       return;
     }
 
-    if (!idUtilisateur) {
-      setErrorMessage("Vous devez être connecté pour passer une commande.");
-      setOpenSnackbar(true);
+    if (modePaiement === "Airtel Money" && !numeroMobile) {
+      console.log("Numéro Mobile Money manquant");
       return;
     }
 
     setLoading(true);
+
     try {
+      // Paiement via PVit
+      if (modePaiement === "Airtel Money") {
+        console.log("Début de la requête PVit...");
+        const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/rest-transaction", {
+          amount: total,
+          customer_account_number: numeroMobile,
+          product: "CommandePlat",
+          free_info: "Paiement App"
+        });
+
+        console.log("Réponse de l'API PVit:", paiementResponse.data);
+        const paiementData = paiementResponse.data;
+
+        if (!paiementData.success || paiementData.data.status !== "SUCCESS") {
+          console.log("Échec du paiement:", paiementData);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Enregistrement de la commande
+      console.log("Envoi de la commande...");
       const commande = {
         idUtilisateur,
         idPlat,
@@ -57,37 +111,35 @@ export default function Facture() {
         modeDePaiement: modePaiement,
         date_com: new Date().toISOString(),
       };
+      console.log("Données de la commande:", commande);
 
       const response = await axios.post("https://tchopshap.onrender.com/commande", commande);
+      console.log("Réponse de l'API commande:", response.data);
 
       if (response.status === 200 || response.status === 201) {
+        console.log("Commande créée avec succès!");
         navigate("/Confirmation");
       } else {
-        setErrorMessage("Une erreur s’est produite lors de la commande.");
-        setOpenSnackbar(true);
+        console.log("Erreur lors de la création de la commande:", response);
       }
     } catch (error) {
-      console.error("Erreur lors de la commande :", error);
-      setErrorMessage("Impossible d’envoyer la commande. Veuillez réessayer.");
-      setOpenSnackbar(true);
+      console.error("Erreur détaillée:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
-
-  useEffect(() => {
-    if (!user) {
-      navigate("/profil", { state: { from: location.pathname } });
-    }
-  }, [user, navigate, location]);
-
-  //  Fonction pour retourner à la page Cart avec les données précédentes
   const handleBack = () => {
-    navigate("/Cart", { state: { idPlat, idUtilisateur, total, sousTotal, fraisLivraison,plat, quantite: 1  } });
+    navigate("/Cart", {
+      state: {
+        idPlat,
+        idUtilisateur,
+        total,
+        sousTotal,
+        fraisLivraison,
+        items
+      }
+    });
   };
 
   return (
@@ -110,7 +162,6 @@ export default function Facture() {
         <Typography variant="h6" fontWeight="bold" gutterBottom>
           Informations de livraison
         </Typography>
-
         <Box>
           <Typography>Nom complet</Typography>
           <TextField fullWidth size="small" placeholder="Jean Dupont" sx={{ mb: 2 }} />
@@ -222,13 +273,6 @@ export default function Facture() {
           <Typography fontWeight="bold">{total.toLocaleString("fr-FR")} F</Typography>
         </Box>
       </Paper>
-
-      {/* Snackbar pour les erreurs */}
-      <Snackbar open={openSnackbar} autoHideDuration={4000} onClose={handleCloseSnackbar}>
-        <Alert severity="error" onClose={handleCloseSnackbar} variant="filled" sx={{ width: "100%" }}>
-          {errorMessage}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 }

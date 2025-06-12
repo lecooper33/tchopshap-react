@@ -21,7 +21,7 @@ export default function Panier() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { cartItems, updateCartItem, removeFromCart, totalAmount } = useCart();
-  const fraisLivraison = 1000;
+  const fraisLivraison = 500;
 
   const formatPrix = (prix) => {
     if (prix == null) return "0 XOF";
@@ -67,7 +67,9 @@ export default function Panier() {
     const panierData = {
       items: cartItems,
       fraisLivraison,
-      total: totalAmount + fraisLivraison
+      sousTotal: totalAmount,
+      total: totalAmount + fraisLivraison,
+      idPlat: cartItems[0]?.plat?.idPlat // Ajout de l'ID du plat
     };
 
     if (user) {
