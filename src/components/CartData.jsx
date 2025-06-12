@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Container,
   Typography,
@@ -6,28 +6,22 @@ import {
   Paper,
   Button,
   IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 export default function Panier() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const plat = location.state?.plat;
   const { user } = useAuth();
-  const [quantite, setQuantite] = useState(1);
+  const { cartItems, updateCartItem, removeFromCart, totalAmount } = useCart();
   const fraisLivraison = 1000;
-
-  // Sauvegarde dans localStorage
-  useEffect(() => {
-    if (!plat) {
-      const panierLocal = JSON.parse(localStorage.getItem("panier"));
-      if (panierLocal?.plat) {
-        navigate("/cart", { state: { plat: panierLocal } });
-      }
-    }
-  }, [plat, quantite, navigate]);
 
   const formatPrix = (prix) => {
     if (prix == null) return "0 XOF";
@@ -38,29 +32,43 @@ export default function Panier() {
     });
   };
 
-  const ajusterQuantite = (action) => {
-    setQuantite((prev) => {
-      if (action === "augmenter") return prev + 1;
-      if (action === "diminuer") return Math.max(1, prev - 1);
-      if (action === "reset") return 1;
-      return prev;
-    });
+  const ajusterQuantite = (idPlat, quantiteActuelle, action) => {
+    let nouvelleQuantite = quantiteActuelle;
+    if (action === "augmenter") nouvelleQuantite += 1;
+    else if (action === "diminuer") nouvelleQuantite = Math.max(0, quantiteActuelle - 1);
+    
+    if (nouvelleQuantite === 0) {
+      removeFromCart(idPlat);
+    } else {
+      updateCartItem(idPlat, nouvelleQuantite);
+    }
   };
 
-  if (!plat) {
+  if (cartItems.length === 0) {
     return (
       <Container sx={{ mt: 4 }}>
-        <Typography variant="h6">Aucun plat sélectionné.</Typography>
+        <Typography variant="h6">Votre panier est vide.</Typography>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/restaurants')}
+          sx={{ 
+            mt: 2,
+            backgroundColor: "#F97316",
+            '&:hover': { backgroundColor: "#ea580c" }
+          }}
+        >
+          Parcourir les restaurants
+        </Button>
       </Container>
     );
   }
 
-  const sousTotal = plat.prix * quantite;
-  const total = sousTotal + fraisLivraison;
-
   const handleCommander = () => {
-    const panierData = { plat, quantite, sousTotal, total, fraisLivraison };
-    localStorage.setItem("panier", JSON.stringify(panierData));
+    const panierData = {
+      items: cartItems,
+      fraisLivraison,
+      total: totalAmount + fraisLivraison
+    };
 
     if (user) {
       navigate("/Paiement", { state: panierData });
@@ -75,36 +83,61 @@ export default function Panier() {
         Votre panier
       </Typography>
 
-      <Box
-        component="img"
-        src={plat.image}
-        alt={plat.nom}
-        sx={{
-          width: "100%",
-          height: 300,
-          objectFit: "cover",
-          borderRadius: 2,
-          mb: 2,
-        }}
-      />
-
       <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6">{plat.nom}</Typography>
-        <Typography variant="body2" color="text.secondary" mb={1}>
-          {plat.description}
-        </Typography>
-        <Typography fontWeight="bold" sx={{ fontSize: "1.2rem", color: "#F97316" }}>
-          {formatPrix(plat.prix)} / unité
-        </Typography>
-
-        <Box display="flex" alignItems="center" justifyContent="start" gap={2} mt={2}>
-          <Button variant="outlined" onClick={() => ajusterQuantite("diminuer")}>-</Button>
-          <Typography>{quantite}</Typography>
-          <Button variant="outlined" onClick={() => ajusterQuantite("augmenter")}>+</Button>
-          <IconButton onClick={() => ajusterQuantite("reset")} sx={{ color: "#F97316" }}>
-            <DeleteIcon />
-          </IconButton>
-        </Box>
+        <List>
+          {cartItems.map((item, index) => (
+            <React.Fragment key={item.plat.idPlat}>
+              {index > 0 && <Divider />}
+              <ListItem sx={{ py: 2 }}>
+                <Box
+                  component="img"
+                  src={item.plat.image}
+                  alt={item.plat.nom}
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 1,
+                    mr: 2,
+                    objectFit: 'cover'
+                  }}
+                />
+                <ListItemText
+                  primary={item.plat.nom}
+                  secondary={
+                    <Typography variant="body2" color="text.secondary">
+                      {formatPrix(item.plat.prix)} / unité
+                    </Typography>
+                  }
+                />
+                <ListItemSecondaryAction>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => ajusterQuantite(item.plat.idPlat, item.quantite, "diminuer")}
+                    >
+                      -
+                    </Button>
+                    <Typography>{item.quantite}</Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => ajusterQuantite(item.plat.idPlat, item.quantite, "augmenter")}
+                    >
+                      +
+                    </Button>
+                    <IconButton 
+                      onClick={() => removeFromCart(item.plat.idPlat)}
+                      sx={{ color: "#F97316" }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </ListItemSecondaryAction>
+              </ListItem>
+            </React.Fragment>
+          ))}
+        </List>
       </Paper>
 
       <Paper elevation={3} sx={{ p: 3 }}>
@@ -114,7 +147,7 @@ export default function Panier() {
 
         <Box display="flex" justifyContent="space-between" mb={1}>
           <Typography>Sous-total</Typography>
-          <Typography>{formatPrix(sousTotal)}</Typography>
+          <Typography>{formatPrix(totalAmount)}</Typography>
         </Box>
 
         <Box display="flex" justifyContent="space-between" mb={1}>
@@ -130,7 +163,9 @@ export default function Panier() {
           borderTop="1px solid #ddd"
         >
           <Typography fontWeight="bold">Total</Typography>
-          <Typography fontWeight="bold">{formatPrix(total)}</Typography>
+          <Typography fontWeight="bold">
+            {formatPrix(totalAmount + fraisLivraison)}
+          </Typography>
         </Box>
 
         <Button

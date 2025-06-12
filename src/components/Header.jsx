@@ -26,6 +26,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { LuShoppingCart } from "react-icons/lu";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 const Header = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const Header = () => {
   const isTabletOrMore = useMediaQuery(theme.breakpoints.up("sm"));
 
   const { user, logout } = useAuth();
+  const { cartCount } = useCart();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const toggleDrawer = () => {
@@ -138,11 +140,8 @@ const Header = () => {
               },
             }}
           >
-            <Badge badgeContent={1} color="error">
-              <LuShoppingCart
-                size={20}
-                color={theme.palette.text.primary}
-              />
+            <Badge badgeContent={cartCount} color="error">
+              <LuShoppingCart style={{ width: 24, height: 24 }} />
             </Badge>
           </IconButton>
 

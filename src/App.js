@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { CartProvider } from "./context/CartContext";
 
 // Pages utilisateurs
 import Home from "./pages/Home.jsx";
@@ -24,6 +25,7 @@ import Restaurants from "./admin/pages/Restaurants.jsx"
 import PrivateRoutes from "./admin/components/PrivateRoutes.jsx";
 function App() {
   return (
+    <CartProvider>
     <Router>
       <Routes>
         {/* Routes utilisateurs */}
@@ -47,6 +49,7 @@ function App() {
         <Route path="/admin/client" element={<PrivateRoutes><Client /></PrivateRoutes>} />
       </Routes>
     </Router>
+    </CartProvider>
   );
 }
 

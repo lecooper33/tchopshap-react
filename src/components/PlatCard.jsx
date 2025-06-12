@@ -14,11 +14,17 @@ import {
   CardMedia,
   CardContent,
   Skeleton,
+  Badge,
+  IconButton,
+  Stack,
 } from "@mui/material";
+import { ShoppingCart } from "@mui/icons-material";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "./Header"
 import Footer from "./Footer"
+import { useCart } from "../context/CartContext";
+
 const PlatCard = () => {
   const { idRestaurant } = useParams();
   const [plats, setPlats] = useState([]);
@@ -28,9 +34,10 @@ const PlatCard = () => {
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState("Toutes les catégories");
   const [prixMin, setPrixMin] = useState("");
-  const [prixMax, setPrixMax] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [prixMax, setPrixMax] = useState("");  const [loading, setLoading] = useState(true);
+  const [platSelectionne, setPlatSelectionne] = useState(false);
   const navigate = useNavigate();
+  const { addToCart, cartCount } = useCart();
 
   // Récupérer les plats
   useEffect(() => {
@@ -97,12 +104,18 @@ const PlatCard = () => {
       const max = prixMax === "" ? Infinity : Number(prixMax);
       return prix >= min && prix <= max;
     });
+  const handleAddToCart = (plat) => {
+    addToCart({
+      plat,
+      quantite: 1,
+    });
+    setPlatSelectionne(true);
+  };
 
   return (
     <div>
       <Header/>
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Typography variant="h5" fontWeight={600} mb={2}>
+    <Box sx={{ p: { xs: 2, md: 3 } }}>      <Typography variant="h5" fontWeight={600} mb={2}>
         {selectedCat !== "Toutes les catégories"
           ? `Plats - ${selectedCat}`
           : idRestaurant
@@ -168,17 +181,12 @@ const PlatCard = () => {
       </Paper>
 
       <Box sx={{ p: { xs: 2, md: 3 } }}>
-        <Grid
-          container
-          spacing={3}
-          display="grid"
-          gridTemplateColumns={{
-            xs: "1fr",
-            sm: "1fr 1fr",
-            md: "1fr 1fr",
-            lg: "1fr 1fr",
-          }}
-        >
+        <Grid container spacing={3} display="grid" gridTemplateColumns={{
+          xs: "1fr",
+          sm: "1fr 1fr",
+          md: "1fr 1fr",
+          lg: "1fr 1fr",
+        }}>
           {loading
             ? Array.from(new Array(4)).map((_, i) => (
                 <Grid item key={i} xs={12}>
@@ -243,21 +251,33 @@ const PlatCard = () => {
                       >
                         <Typography variant="subtitle1" fontWeight={600}>
                           {plat.prix.toLocaleString()} FCFA
-                        </Typography>
-                        <Button
-                          variant="contained"
-                          color="warning"
-                          size="small"
-                          onClick={() => navigate("/Cart", 
-                            { state: { plat:{
-                                  ...plat,
-                                  idPlat: plat.idPlat,
-                                  idRestaurant: plat.idRestaurant,
-                                           } } 
-                                })}
-                        >
-                          Ajouter
-                        </Button>
+                        </Typography>                        <Stack direction="row" spacing={1}>
+                          <Button
+                            variant="contained"
+                            color="warning"
+                            size="small"
+                            onClick={() => handleAddToCart(plat)}
+                          >
+                            Ajouter
+                          </Button>
+                          {platSelectionne && cartCount > 0 && (
+                            <IconButton
+                              size="small"
+                              onClick={() => navigate('/Cart')}
+                              sx={{
+                                backgroundColor: 'orange',
+                                color: 'white',
+                                '&:hover': {
+                                  backgroundColor: 'darkorange',
+                                }
+                              }}
+                            >
+                              <Badge badgeContent={cartCount} color="error">
+                                <ShoppingCart fontSize="small" />
+                              </Badge>
+                            </IconButton>
+                          )}
+                        </Stack>
                       </Box>
                     </CardContent>
                   </Card>
