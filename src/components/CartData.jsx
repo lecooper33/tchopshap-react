@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Container,
   Typography,
@@ -16,12 +16,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import axios from "axios";
 
 export default function Panier() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cartItems, updateCartItem, removeFromCart, totalAmount } = useCart();
+  const { cartItems, updateCartItem, removeFromCart, totalAmount, clearCart } = useCart();
   const fraisLivraison = 500;
+  const [loading, setLoading] = useState(false);
 
   const formatPrix = (prix) => {
     if (prix == null) return "0 XOF";
@@ -44,6 +46,73 @@ export default function Panier() {
     }
   };
 
+  const validateCommande = () => {
+    if (!user || !user.id) {
+      console.log("Utilisateur non connecté");
+      return false;
+    }
+
+    if (!cartItems || cartItems.length === 0) {
+      console.log("Panier vide");
+      return false;
+    }
+
+    if (!cartItems[0]?.plat?.idPlat) {
+      console.log("ID du plat manquant");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleCommander = async () => {
+    if (!user) {
+      navigate("/profil", { state: { from: "/Cart" } });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Structurer les données exactement comme attendu par l'API
+      const commande = {
+        idUtilisateur: parseInt(user.id),
+        idPlat: parseInt(cartItems[0]?.plat?.idPlat),
+        statut: "en préparation",
+        modeDePaiement: "", // Sera défini lors du paiement
+        date_com: new Date().toISOString()
+      };
+
+      console.log("Envoi de la commande:", commande);
+
+      const response = await axios.post(
+        "https://tchopshap.onrender.com/commande",
+        commande
+      );
+      
+      console.log("Réponse du serveur:", response.data);
+
+      if (response.status === 200 || response.status === 201) {
+        // Rediriger vers la page de paiement avec les informations nécessaires
+        const panierData = {
+          commandeId: response.data.idCommande,
+          items: cartItems,
+          fraisLivraison,
+          sousTotal: totalAmount,
+          total: totalAmount + fraisLivraison
+        };
+
+        clearCart(); // Vider le panier après création réussie de la commande
+        navigate("/Paiement", { state: panierData });
+      } else {
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Erreur détaillée:", error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (cartItems.length === 0) {
     return (
       <Container sx={{ mt: 4 }}>
@@ -62,22 +131,6 @@ export default function Panier() {
       </Container>
     );
   }
-
-  const handleCommander = () => {
-    const panierData = {
-      items: cartItems,
-      fraisLivraison,
-      sousTotal: totalAmount,
-      total: totalAmount + fraisLivraison,
-      idPlat: cartItems[0]?.plat?.idPlat // Ajout de l'ID du plat
-    };
-
-    if (user) {
-      navigate("/Paiement", { state: panierData });
-    } else {
-      navigate("/profil", { state: { from: "/Paiement" } });
-    }
-  };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -174,6 +227,7 @@ export default function Panier() {
           fullWidth
           variant="contained"
           onClick={handleCommander}
+          disabled={loading}
           sx={{
             mt: 3,
             backgroundColor: "#F97316",
@@ -181,7 +235,7 @@ export default function Panier() {
             "&:hover": { backgroundColor: "#ea580c" },
           }}
         >
-          Commander
+          {loading ? "Chargement..." : "Commander"}
         </Button>
       </Paper>
     </Container>

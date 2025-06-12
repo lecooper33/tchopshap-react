@@ -17,6 +17,8 @@ export default function Facture() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [commandeId, setCommandeId] = useState(null);
   
   // Récupération des données du state
   const state = location.state || {};
@@ -24,122 +26,122 @@ export default function Facture() {
     total = 0,
     sousTotal = 0,
     fraisLivraison = 0,
-    idPlat,
     items = []
   } = state;
 
-  // Vérification explicite de l'utilisateur et de son ID
   useEffect(() => {
-    console.log("=== Vérification de l'authentification ===");
-    console.log("User object:", user);
-    console.log("User ID:", user?.id);
-    
     if (!user) {
-      console.log("❌ Utilisateur non connecté, redirection vers la page de profil");
       navigate("/profil", { state: { from: location.pathname } });
-    } else if (!user.id) {
-      console.log("❌ ID utilisateur manquant dans l'objet user");
-    } else {
-      console.log("✅ Utilisateur authentifié avec ID:", user.id);
+      return;
     }
+
+    // Récupérer la dernière commande de l'utilisateur
+    const fetchDerniereCommande = async () => {
+      try {
+        const response = await axios.get("https://tchopshap.onrender.com/commande");
+        const commandes = response.data;
+        
+        // Filtrer les commandes de l'utilisateur et prendre la plus récente
+        const commandesUtilisateur = commandes.filter(
+          cmd => cmd.idUtilisateur === parseInt(user.id)
+        );
+
+        if (commandesUtilisateur.length > 0) {
+          // Trier par date décroissante et prendre la première
+          const derniereCommande = commandesUtilisateur.sort(
+            (a, b) => new Date(b.date_com) - new Date(a.date_com)
+          )[0];
+
+          console.log("Dernière commande trouvée:", derniereCommande);
+          setCommandeId(derniereCommande.idCommande);
+        } else {
+          console.log("Aucune commande trouvée pour l'utilisateur");
+          navigate("/Cart");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération de la commande:", error);
+        navigate("/Cart");
+      }
+    };
+
+    fetchDerniereCommande();
   }, [user, navigate, location.pathname]);
 
-  // Récupération de l'ID utilisateur du contexte d'authentification
-  const idUtilisateur = user?.id;
-
   const [modePaiement, setModePaiement] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [operateur, setOperateur] = useState("");
   const [numeroMobile, setNumeroMobile] = useState("");
 
+  // Fonction pour changer l'opérateur et le mode de paiement en même temps
+  const handleOperateurChange = (newOperateur) => {
+    setOperateur(newOperateur);
+    setModePaiement("Mobile Money");
+  };
+
   const handleConfirm = async () => {
-    // Vérification détaillée des informations requises
-    console.log("=== Vérification des informations ===");
-    console.log("modePaiement:", modePaiement);
-    console.log("idPlat:", idPlat);
-    console.log("idUtilisateur:", idUtilisateur);
-    console.log("user:", user);
-    console.log("location.state:", location.state);
-    console.log("items:", items);
-
-    if (!user) {
-      navigate("/profil", { state: { from: location.pathname } });
-      return;
+    // Validation pour le paiement mobile money
+    if (modePaiement === "Mobile Money") {
+      if (!operateur) {
+        alert("Veuillez sélectionner un opérateur (Airtel Money ou Moov Money)");
+        return;
+      }
+      if (!numeroMobile) {
+        alert("Veuillez entrer votre numéro Mobile Money");
+        return;
+      }
+      // Validation du format du numéro
+      const numeroRegex = /^0[1-9][0-9]{7}$/;  // Format: 0XXXXXXXX (9 chiffres)
+      if (!numeroRegex.test(numeroMobile)) {
+        alert("Le numéro mobile doit être au format 0XXXXXXXX (9 chiffres)");
+        return;
+      }
     }
 
-    if (!modePaiement || !idPlat || !idUtilisateur) {
-      console.log("=== Détails des informations manquantes ===");
-      if (!modePaiement) console.log("❌ Mode de paiement non sélectionné");
-      if (!idPlat) console.log("❌ ID du plat manquant");
-      if (!idUtilisateur) console.log("❌ ID de l'utilisateur manquant");
-      return;
-    }
-
-    if (modePaiement === "Airtel Money" && !numeroMobile) {
-      console.log("Numéro Mobile Money manquant");
+    if (!commandeId) {
+      alert("ID de commande manquant");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Paiement via PVit
-      if (modePaiement === "Airtel Money") {
-        console.log("Début de la requête PVit...");
+      // Paiement via PVit pour le mobile money
+      if (modePaiement === "Mobile Money") {
         const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/rest-transaction", {
           amount: total,
           customer_account_number: numeroMobile,
           product: "CommandePlat",
-          free_info: "Paiement App"
+          free_info: operateur // Ajout de l'opérateur dans les infos
         });
 
-        console.log("Réponse de l'API PVit:", paiementResponse.data);
         const paiementData = paiementResponse.data;
-
         if (!paiementData.success || paiementData.data.status !== "SUCCESS") {
-          console.log("Échec du paiement:", paiementData);
+          alert("Échec du paiement: " + (paiementData.message || "Erreur inconnue"));
           setLoading(false);
           return;
         }
       }
 
-      // Enregistrement de la commande
-      console.log("Envoi de la commande...");
-      const commande = {
-        idUtilisateur,
-        idPlat,
-        statut: "en préparation",
-        modeDePaiement: modePaiement,
-        date_com: new Date().toISOString(),
-      };
-      console.log("Données de la commande:", commande);
+      // Mettre à jour le mode de paiement de la commande
+      const modePaiementFinal = modePaiement === "Mobile Money" ? operateur : modePaiement;
+      
+      const response = await axios.put(`https://tchopshap.onrender.com/commande/${commandeId}`, {
+        modeDePaiement: modePaiementFinal
+      });
 
-      const response = await axios.post("https://tchopshap.onrender.com/commande", commande);
-      console.log("Réponse de l'API commande:", response.data);
-
-      if (response.status === 200 || response.status === 201) {
-        console.log("Commande créée avec succès!");
+      if (response.status === 200) {
         navigate("/Confirmation");
       } else {
-        console.log("Erreur lors de la création de la commande:", response);
+        alert("Erreur lors de la mise à jour du mode de paiement");
       }
     } catch (error) {
-      console.error("Erreur détaillée:", error.response?.data || error.message);
+      alert("Erreur lors du paiement: " + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
   };
 
   const handleBack = () => {
-    navigate("/Cart", {
-      state: {
-        idPlat,
-        idUtilisateur,
-        total,
-        sousTotal,
-        fraisLivraison,
-        items
-      }
-    });
+    navigate("/Cart");
   };
 
   return (
@@ -150,10 +152,10 @@ export default function Facture() {
         </Button>
 
         <Typography variant="h5" fontWeight="bold" mt={2} mb={1}>
-          Finaliser la commande
+          Paiement de la commande
         </Typography>
         <Typography>
-          Remplissez les informations ci-dessous pour finaliser votre commande
+          Choisissez votre méthode de paiement préférée
         </Typography>
       </Box>
 
@@ -194,7 +196,7 @@ export default function Facture() {
             <TextField fullWidth size="small" placeholder="1234 5678 9012 3456" sx={{ mb: 2 }} />
             <Box sx={{ display: "flex", gap: 2 }}>
               <Box flex={1}>
-                <Typography>Date d’expiration</Typography>
+                <Typography>Date d'expiration</Typography>
                 <TextField fullWidth size="small" placeholder="MM/AA" />
               </Box>
               <Box flex={1}>
@@ -209,20 +211,47 @@ export default function Facture() {
         <Box sx={{ mt: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Checkbox
-              checked={modePaiement === "Airtel Money"}
-              onChange={() => setModePaiement("Airtel Money")}
+              checked={modePaiement === "Mobile Money"}
+              onChange={() => {
+                if (modePaiement === "Mobile Money") {
+                  setModePaiement("");
+                  setOperateur("");
+                } else {
+                  setModePaiement("Mobile Money");
+                }
+              }}
             />
             <Typography>Mobile Money</Typography>
           </Box>
-          {modePaiement === "Airtel Money" && (
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Numéro Mobile Money"
-              sx={{ mt: 1 }}
-              value={numeroMobile}
-              onChange={(e) => setNumeroMobile(e.target.value)}
-            />
+          {modePaiement === "Mobile Money" && (
+            <Box sx={{ mt: 1 }}>
+              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Checkbox
+                    checked={operateur === "Airtel Money"}
+                    onChange={() => handleOperateurChange("Airtel Money")}
+                  />
+                  <Typography>Airtel Money</Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Checkbox
+                    checked={operateur === "Moov Money"}
+                    onChange={() => handleOperateurChange("Moov Money")}
+                  />
+                  <Typography>Moov Money</Typography>
+                </Box>
+              </Box>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Numéro Mobile Money (ex: 074XXXXXX)"
+                value={numeroMobile}
+                onChange={(e) => setNumeroMobile(e.target.value)}
+                error={numeroMobile && !/^0[1-9][0-9]{7}$/.test(numeroMobile)}
+                helperText={numeroMobile && !/^0[1-9][0-9]{7}$/.test(numeroMobile) ? 
+                  "Format invalide. Utilisez le format: 0XXXXXXXX" : ""}
+              />
+            </Box>
           )}
         </Box>
 
@@ -248,7 +277,7 @@ export default function Facture() {
             fontWeight: "bold",
           }}
         >
-          {loading ? "Envoi en cours..." : "Confirmer la commande"}
+          {loading ? "Traitement en cours..." : "Confirmer le paiement"}
         </Button>
       </Paper>
 
