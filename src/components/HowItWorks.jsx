@@ -11,12 +11,30 @@ function HowItWorks() {
         Commandez votre repas en trois étapes simples et rapides
       </Typography>
 
-      <Grid container spacing={4} sx={{ py: 2 , gap:'100px'}} justifyContent="center"  >
+      <Grid
+        container
+        spacing={4}
+        sx={{ py: 2, gap: '100px' }}
+        justifyContent="center"
+      >
         {/* Étape 1 */}
-        <Grid item xs={12} sm={6} md={4}>
-          <Box sx={{ textAlign: 'center',alignItems:'center' }}>
-            <Box sx={{ width: 64, height: 64, borderRadius: '50%',
-               backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', }}>
+        <Grid
+          item
+          sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }}
+        >
+          <Box sx={{ textAlign: 'center', alignItems: 'center' }}>
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                backgroundColor: '#FFEDD5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+              }}
+            >
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#F97316' }}>1</Typography>
             </Box>
             <Typography sx={{ fontWeight: 600, py: 1 }}>Choisissez un restaurant</Typography>
@@ -27,11 +45,23 @@ function HowItWorks() {
         </Grid>
 
         {/* Étape 2 */}
-        <Grid item xs={12} sm={6} md={4}>
-          <Box sx={{ textAlign: 'center',alignItems:'center' }}>
+        <Grid
+          item
+          sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }}
+        >
+          <Box sx={{ textAlign: 'center', alignItems: 'center' }}>
             <Box
-              sx={{width: 64, height: 64, borderRadius: '50%',
-                backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto',}}>
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                backgroundColor: '#FFEDD5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+              }}
+            >
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#F97316' }}>2</Typography>
             </Box>
             <Typography fontWeight="bold" sx={{ py: 1 }}>Sélectionnez vos plats</Typography>
@@ -41,10 +71,23 @@ function HowItWorks() {
         </Grid>
 
         {/* Étape 3 */}
-        <Grid item xs={12} sm={6} md={4}>
-          <Box sx={{ textAlign: 'center',alignItems:'center' }}>
-            <Box sx={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: '#FFEDD5', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto',}}>
+        <Grid
+          item
+          sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }}
+        >
+          <Box sx={{ textAlign: 'center', alignItems: 'center' }}>
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                backgroundColor: '#FFEDD5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+              }}
+            >
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#F97316' }}>3</Typography>
             </Box>
             <Typography fontWeight="bold" sx={{ py: 1 }}>Livraison rapide</Typography>

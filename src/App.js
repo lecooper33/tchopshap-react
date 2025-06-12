@@ -11,6 +11,7 @@ import Confirmation from "./pages/Confirmation.jsx";
 import Otp from "./pages/Otp.jsx"
 import PlatCard from "./components/PlatCard.jsx";
 import SignUp from "./pages/SignUp.jsx";
+import EditProfil from "./pages/ProfilUpload.jsx";
 // Pages administrateur
 
 import Admin from "./admin/pages/Admin.jsx";
@@ -35,6 +36,7 @@ function App() {
         <Route path="/paiement" element={<Paiement />} />
         <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/otp" element={<Otp />} />
+        <Route path="/editprofil" element={<EditProfil/>}/>
         {/* Routes administrateur */}
         
         <Route path="/admin" element={<PrivateRoutes><Admin /></PrivateRoutes>} />

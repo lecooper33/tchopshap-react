@@ -22,7 +22,6 @@ const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin" },
   { text: "Client", icon: <PeopleIcon />, path: "/admin/client" },
   { text: "Plats", icon: <RestaurantIcon />, path: "/admin/plats" },
-  { text: "Commandes", icon: <ShoppingCartIcon />, path: "/admin/commandes" },
   { text: "Restaurants", icon: <StoreIcon />, path: "/admin/restaurants" },
 ];
 

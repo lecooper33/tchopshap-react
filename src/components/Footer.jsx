@@ -15,7 +15,7 @@ function Footer() {
         <Grid container spacing={4}>
         
           {/* Section TchôpShap */}
-          <Grid item xs={12} md={4}>
+          <Grid xs={12} md={4}>
             <Typography variant="h6" fontWeight="bold">
               TchôpShap
             </Typography>
@@ -38,38 +38,36 @@ function Footer() {
           </Grid>
           
           {/* Section Liens Rapides */}
-          <Grid item xs={12} md={4} sx={{ width: '25%' }}>
+          <Grid  xs={12} md={4} sx={{ width: '25%' }}>
             <Typography variant="h6" fontWeight="bold">
               Liens Rapides
             </Typography>
             <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Link href="#" underline="none" color="inherit" variant="body2"
+              <Link component={RouterLink} to="/" underline="none" color="inherit" variant="body2"
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Accueil
               </Link>
-              <Link href="/restaurants" underline="none" color="inherit" variant="body2"
+              <Link component={RouterLink} to="/restaurants" underline="none" color="inherit" variant="body2"
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Restaurants
               </Link>
-              <Link href="/PLatCard" underline="none" color="inherit" variant="body2"
+              <Link component={RouterLink} to="/PLatCard" underline="none" color="inherit" variant="body2"
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Plats
               </Link>
-              <Link href="/signup" underline="none" color="inherit" variant="body2"
+              <Link component={RouterLink} to="/signup" underline="none" color="inherit" variant="body2"
                 sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
                 Inscription
               </Link>
-              <RouterLink to='/Profil' style={{ textDecoration: 'none' }}>
-                <Link underline="none" color="white" variant="body2" 
-                  sx={{ '&:hover': { textDecoration: 'underline' } }}>
-                  Connexion
-                </Link>
-              </RouterLink>
+              <Link component={RouterLink} to="/Profil" underline="none" color="inherit" variant="body2"
+                sx={{ '&:hover': { textDecoration: 'underline', color: '#f0f0f0' } }}>
+                Connexion
+              </Link>
             </Box>
           </Grid>
 
           {/* Section Contact */}
-          <Grid item xs={12} md={4} width={'28%'}>
+          <Grid  xs={12} md={4} width={'28%'}>
             <Typography variant="h6" fontWeight="bold">
               Contact
             </Typography>

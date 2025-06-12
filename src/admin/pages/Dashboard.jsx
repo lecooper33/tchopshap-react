@@ -51,8 +51,7 @@ export default function Dashboard() {
         axios.get("https://tchopshap.onrender.com/plat"),
         axios.get("https://tchopshap.onrender.com/commande"),
         axios.get("https://tchopshap.onrender.com/categorie"),
-        axios.get("https://tchopshap.onrender.com/livreur"),
-        axios.get("https://tchopshap.onrender.com/livraison"),
+
       ]);
 
       // Détection nouvelles commandes
@@ -72,8 +71,7 @@ export default function Dashboard() {
         plat: resPlat.data,
         commande: resCommande.data,
         categorie: resCategorie.data,
-        livreur: resLivreur.data,
-        livraison: resLivraison.data,
+
       });
 
       setLoading(false);
@@ -121,23 +119,10 @@ export default function Dashboard() {
       color: "#f57c00",
       route: "/admin/categories",
     },
-    {
-      title: "Livreurs",
-      icon: <DeliveryDining />,
-      count: stats.livreur.length,
-      color: "#0097a7",
-      route: "/admin/livreurs",
-    },
-    {
-      title: "Livraisons",
-      icon: <LocalShipping />,
-      count: stats.livraison.length,
-      color: "#455a64",
-      route: "/admin/livraisons",
-    },
+
   ];
 
-  return (
+  return ( 
     <AdminLayout>
       <Typography variant="h4" gutterBottom>Tableau de bord</Typography>
 
@@ -148,7 +133,7 @@ export default function Dashboard() {
       ) : (
         <Grid container spacing={3}>
           {statCards.map((card, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid  xs={12} sm={6} md={4} key={index}>
               <Paper
                 elevation={3}
                 sx={{

@@ -8,6 +8,7 @@ import axios from "axios";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { motion } from "framer-motion";
+import AdminLayout from "../AdminLayout";
 
 function CommandeUpload() {
   const [commandes, setCommandes] = useState([]);
@@ -72,6 +73,7 @@ function CommandeUpload() {
   const handleVoirMoins = () => setVisibleCount(4);
 
   return (
+    <AdminLayout>
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>Liste des Commandes</Typography>
 
@@ -149,6 +151,7 @@ function CommandeUpload() {
         </DialogActions>
       </Dialog>
     </Box>
+    </AdminLayout>
   );
 }
 

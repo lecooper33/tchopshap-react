@@ -120,10 +120,8 @@ export default function Otp() {
             fullWidth
             sx={{
               py: 1.5,
-              backgroundColor: '#1976d2',
-              '&:hover': {
-                backgroundColor: '#115293',
-              },
+              backgroundColor: 'orange',
+             
               borderRadius: 1,
             }}
           >

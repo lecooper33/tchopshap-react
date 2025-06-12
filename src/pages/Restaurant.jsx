@@ -18,6 +18,7 @@ import {
   CardContent,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import axios from "axios"; // Import axios
 
 const Resto = () => {
   const [search, setSearch] = useState("");
@@ -28,27 +29,29 @@ const Resto = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Récupération dynamique des catégories
+  // Dynamic category retrieval
   useEffect(() => {
-    fetch("https://tchopshap.onrender.com/categorie")
-      .then((res) => res.json())
-      .then((data) => {
-        setCatData(data);
-        setCategories(["Tous", ...data.map((c) => c["categorie"])]);
-      })
-      .catch(console.error);
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("https://tchopshap.onrender.com/categorie");
+        setCatData(res.data);
+        setCategories(["Tous", ...res.data.map((c) => c["categorie"])]);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
   }, []);
 
-  // Récupération des restaurants
+  // Restaurant retrieval
   useEffect(() => {
     const fetchR = async () => {
       setLoading(true);
       try {
-        const res = await fetch("https://tchopshap.onrender.com/restaurant");
-        const data = await res.json();
-        setRestaurants(data);
-      } catch (e) {
-        console.error(e);
+        const res = await axios.get("https://tchopshap.onrender.com/restaurant");
+        setRestaurants(res.data);
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
       } finally {
         setLoading(false);
       }
@@ -58,7 +61,7 @@ const Resto = () => {
 
   const getCatNom = (id) => {
     const cat = catData.find((c) => c.idCategorie === id);
-    return cat ? cat["catégorie"] : "Inconnue";
+    return cat ? cat["categorie"] : "Inconnue";
   };
 
   const filtered = restaurants
@@ -249,5 +252,3 @@ const Resto = () => {
 };
 
 export default Resto;
-
-

@@ -43,7 +43,7 @@ const RestaurantOnSpot = () => {
       }}
     >
       {Array.from({ length: count }).map((_, index) => (
-        <Grid item xs={12} key={index}>
+        <Grid  xs={12} key={index}>
           <Card
             sx={{
               height: "100%",
@@ -125,7 +125,7 @@ const RestaurantOnSpot = () => {
           }}
         >
           {restaurants.map((resto, index) => (
-            <Grid item xs={12} key={index}>
+            <Grid  xs={12} key={index}>
               <Card
                 sx={{
                   height: "100%",

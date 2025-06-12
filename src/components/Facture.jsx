@@ -18,8 +18,9 @@ import { useAuth } from "../context/AuthContext";
 export default function Facture() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { total = 0, sousTotal = 0, fraisLivraison = 0, idUtilisateur, idPlat } = location.state || {};
-  const user = useAuth();
+  const { total = 0, sousTotal = 0, fraisLivraison = 0, idPlat } = location.state || {};
+  const { user } = useAuth(); // Récupération de l'utilisateur depuis le contexte
+  const idUtilisateur = user?.id; // Extraction de l'ID utilisateur depuis le contexte
 
   const [modePaiement, setModePaiement] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,10 +30,20 @@ export default function Facture() {
   const [numeroMobile, setNumeroMobile] = useState("");
 
   const panier = location.state || JSON.parse(localStorage.getItem("panier"));
-  const plat = panier?.plat;
-  const handleConfirm = async () => {
-    if (!modePaiement || !idUtilisateur || !idPlat) {
+  const plat = panier?.plat;  const handleConfirm = async () => {
+    if (!user) {
+      navigate("/profil", { state: { from: location.pathname } });
+      return;
+    }
+    
+    if (!modePaiement || !idPlat) {
       setErrorMessage("Informations manquantes ou méthode de paiement non sélectionnée.");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (!idUtilisateur) {
+      setErrorMessage("Vous devez être connecté pour passer une commande.");
       setOpenSnackbar(true);
       return;
     }
