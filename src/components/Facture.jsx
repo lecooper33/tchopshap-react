@@ -19,14 +19,20 @@ export default function Facture() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [commandeId, setCommandeId] = useState(null);
+  const [modePaiement, setModePaiement] = useState("");
+  
+  // États pour les informations de livraison
+  const [nomComplet, setNomComplet] = useState("");
+  const [adresse, setAdresse] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [instructions, setInstructions] = useState("");
   
   // Récupération des données du state
   const state = location.state || {};
   const {
     total = 0,
     sousTotal = 0,
-    fraisLivraison = 0,
-    items = []
+    fraisLivraison = 0
   } = state;
 
   useEffect(() => {
@@ -67,7 +73,6 @@ export default function Facture() {
     fetchDerniereCommande();
   }, [user, navigate, location.pathname]);
 
-  const [modePaiement, setModePaiement] = useState("");
   const [operateur, setOperateur] = useState("");
   const [numeroMobile, setNumeroMobile] = useState("");
 
@@ -78,63 +83,76 @@ export default function Facture() {
   };
 
   const handleConfirm = async () => {
-    // Validation pour le paiement mobile money
-    if (modePaiement === "Mobile Money") {
-      if (!operateur) {
-        alert("Veuillez sélectionner un opérateur (Airtel Money ou Moov Money)");
-        return;
-      }
-      if (!numeroMobile) {
-        alert("Veuillez entrer votre numéro Mobile Money");
-        return;
-      }
-      // Validation du format du numéro
-      const numeroRegex = /^0[1-9][0-9]{7}$/;  // Format: 0XXXXXXXX (9 chiffres)
-      if (!numeroRegex.test(numeroMobile)) {
-        alert("Le numéro mobile doit être au format 0XXXXXXXX (9 chiffres)");
-        return;
-      }
+    // Validation des informations de livraison
+    if (!nomComplet || !adresse || !telephone) {
+      alert("Veuillez remplir toutes les informations de livraison obligatoires");
+      return;
+    }
+
+    // Validation du format du numéro de téléphone
+    const numeroRegex = /^0[1-9][0-9]{7}$/;
+    if (!numeroRegex.test(telephone)) {
+      alert("Le numéro de téléphone doit être au format 0XXXXXXXX (9 chiffres)");
+      return;
     }
 
     if (!commandeId) {
       alert("ID de commande manquant");
-      return;
+      return; 
     }
 
     setLoading(true);
 
     try {
-      // Paiement via PVit pour le mobile money
+      // Mettre à jour d'abord les informations de livraison de la commande
+      const updateResponse = await axios.put(`https://tchopshap.onrender.com/commande/${commandeId}`, {
+        modeDePaiement: modePaiement,
+        nomClient: nomComplet,
+        adresseLivraison: adresse,
+        telephone: telephone,
+        instructions: instructions
+      });
+
+      if (updateResponse.status !== 200) {
+        throw new Error("Erreur lors de la mise à jour des informations de livraison");
+      }
+
+      // Traiter ensuite le paiement selon le mode choisi
       if (modePaiement === "Mobile Money") {
         const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/rest-transaction", {
           amount: total,
-          customer_account_number: numeroMobile,
+          customer_account_number: telephone,
           product: "CommandePlat",
-          free_info: operateur // Ajout de l'opérateur dans les infos
+          free_info: nomComplet
         });
 
-        const paiementData = paiementResponse.data;
-        if (!paiementData.success || paiementData.data.status !== "SUCCESS") {
-          alert("Échec du paiement: " + (paiementData.message || "Erreur inconnue"));
-          setLoading(false);
-          return;
+        if (!paiementResponse.data.success || paiementResponse.data.data.status !== "SUCCESS") {
+          throw new Error(paiementResponse.data.message || "Échec du paiement mobile money");
         }
-      }
-
-      // Mettre à jour le mode de paiement de la commande
-      const modePaiementFinal = modePaiement === "Mobile Money" ? operateur : modePaiement;
-      
-      const response = await axios.put(`https://tchopshap.onrender.com/commande/${commandeId}`, {
-        modeDePaiement: modePaiementFinal
-      });
-
-      if (response.status === 200) {
+        
         navigate("/Confirmation");
-      } else {
-        alert("Erreur lors de la mise à jour du mode de paiement");
+      } else if (modePaiement === "Carte Bancaire") {
+        const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/payment/generate-link", {
+          amount: total,
+          customer_account_number: telephone,
+          service: "VISA_MASTERCARD",
+          agent: "WEB",
+          product: "CommandePlat",
+          free_info: nomComplet,
+          owner_charge: "CUSTOMER",
+          operator_owner_charge: "CUSTOMER"
+        });
+
+        if (paiementResponse.data.success && paiementResponse.data.paymentLink) {
+          window.location.href = paiementResponse.data.paymentLink;
+        } else {
+          throw new Error(paiementResponse.data.message || "Échec de la génération du lien de paiement");
+        }
+      } else if (modePaiement === "Espèce") {
+        navigate("/Confirmation");
       }
     } catch (error) {
-      alert("Erreur lors du paiement: " + (error.response?.data?.message || error.message));
+      alert("Erreur lors du traitement: " + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -166,13 +184,46 @@ export default function Facture() {
         </Typography>
         <Box>
           <Typography>Nom complet</Typography>
-          <TextField fullWidth size="small" placeholder="Jean Dupont" sx={{ mb: 2 }} />
+          <TextField 
+            fullWidth 
+            size="small" 
+            placeholder="Jean Dupont" 
+            sx={{ mb: 2 }}
+            value={nomComplet}
+            onChange={(e) => setNomComplet(e.target.value)}
+          />
           <Typography>Adresse de livraison</Typography>
-          <TextField fullWidth multiline rows={3} placeholder="Adresse complète" sx={{ mb: 2 }} />
+          <TextField 
+            fullWidth 
+            multiline 
+            rows={3} 
+            placeholder="Adresse complète" 
+            sx={{ mb: 2 }}
+            value={adresse}
+            onChange={(e) => setAdresse(e.target.value)}
+          />
           <Typography>Numéro de téléphone</Typography>
-          <TextField fullWidth size="small" placeholder="Ex : 077123456" sx={{ mb: 2 }} />
+          <TextField 
+            fullWidth 
+            size="small" 
+            placeholder="Ex : 077123456" 
+            sx={{ mb: 2 }}
+            value={telephone}
+            onChange={(e) => setTelephone(e.target.value)}
+            error={telephone && !/^0[1-9][0-9]{7}$/.test(telephone)}
+            helperText={telephone && !/^0[1-9][0-9]{7}$/.test(telephone) ? 
+              "Format invalide. Utilisez le format: 0XXXXXXXX" : ""}
+          />
           <Typography>Instructions spéciales (optionnel)</Typography>
-          <TextField fullWidth multiline rows={2} size="small" placeholder="Indications" />
+          <TextField 
+            fullWidth 
+            multiline 
+            rows={2} 
+            size="small" 
+            placeholder="Indications" 
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+          />
         </Box>
       </Paper>
 
@@ -183,80 +234,25 @@ export default function Facture() {
         </Typography>
 
         {/* Carte Bancaire */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Checkbox
             checked={modePaiement === "Carte Bancaire"}
             onChange={() => setModePaiement("Carte Bancaire")}
           />
-          <Typography>Carte bancaire</Typography>
+          <Typography>Carte bancaire (Visa/Mastercard)</Typography>
         </Box>
 
-        {modePaiement === "Carte Bancaire" && (
-          <Box>
-            <TextField fullWidth size="small" placeholder="1234 5678 9012 3456" sx={{ mb: 2 }} />
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Box flex={1}>
-                <Typography>Date d'expiration</Typography>
-                <TextField fullWidth size="small" placeholder="MM/AA" />
-              </Box>
-              <Box flex={1}>
-                <Typography>CVV</Typography>
-                <TextField fullWidth size="small" placeholder="123" />
-              </Box>
-            </Box>
-          </Box>
-        )}
-
         {/* Mobile Money */}
-        <Box sx={{ mt: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Checkbox
-              checked={modePaiement === "Mobile Money"}
-              onChange={() => {
-                if (modePaiement === "Mobile Money") {
-                  setModePaiement("");
-                  setOperateur("");
-                } else {
-                  setModePaiement("Mobile Money");
-                }
-              }}
-            />
-            <Typography>Mobile Money</Typography>
-          </Box>
-          {modePaiement === "Mobile Money" && (
-            <Box sx={{ mt: 1 }}>
-              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Checkbox
-                    checked={operateur === "Airtel Money"}
-                    onChange={() => handleOperateurChange("Airtel Money")}
-                  />
-                  <Typography>Airtel Money</Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Checkbox
-                    checked={operateur === "Moov Money"}
-                    onChange={() => handleOperateurChange("Moov Money")}
-                  />
-                  <Typography>Moov Money</Typography>
-                </Box>
-              </Box>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Numéro Mobile Money (ex: 074XXXXXX)"
-                value={numeroMobile}
-                onChange={(e) => setNumeroMobile(e.target.value)}
-                error={numeroMobile && !/^0[1-9][0-9]{7}$/.test(numeroMobile)}
-                helperText={numeroMobile && !/^0[1-9][0-9]{7}$/.test(numeroMobile) ? 
-                  "Format invalide. Utilisez le format: 0XXXXXXXX" : ""}
-              />
-            </Box>
-          )}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Checkbox
+            checked={modePaiement === "Mobile Money"}
+            onChange={() => setModePaiement("Mobile Money")}
+          />
+          <Typography>Mobile Money (Airtel Money / Moov Money)</Typography>
         </Box>
 
         {/* Espèces */}
-        <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
           <Checkbox
             checked={modePaiement === "Espèce"}
             onChange={() => setModePaiement("Espèce")}
@@ -268,7 +264,7 @@ export default function Facture() {
           fullWidth
           variant="contained"
           onClick={handleConfirm}
-          disabled={loading}
+          disabled={loading || !modePaiement}
           sx={{
             mt: 3,
             backgroundColor: "orange",

@@ -6,11 +6,9 @@ import {
   Button
 } from "@mui/material";
 import {
-  Menu as MenuIcon,
-  Dashboard as DashboardIcon,
+  Menu as MenuIcon,  Dashboard as DashboardIcon,
   People as PeopleIcon,
   Restaurant as RestaurantIcon,
-  ShoppingCart as ShoppingCartIcon,
   Store as StoreIcon,
 } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -191,10 +189,11 @@ export default function AdminLayout({ children }) {
 
           <Box display={'flex'} gap={2} alignItems="center">
             <Box display="flex" alignItems="center" gap={1}>
+              <Typography>Bonjour</Typography>
               <Typography fontWeight="bold" textTransform="capitalize">
                 {adminName || "Admin"}
               </Typography>
-              <Avatar src={adminImage || "https://i.pravatar.cc/150?img=1"} alt="Admin Avatar" />
+              <Avatar src={adminImage || "https://i.pravatar.cc/150?img={1}"} alt="Admin Avatar" />
             </Box>
 
             <Button

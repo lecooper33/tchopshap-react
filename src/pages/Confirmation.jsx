@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
 import {
   Box,
   Typography,
@@ -13,27 +14,70 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useAuth } from "../context/AuthContext";
 
 export default function Confirm() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  // Définir l'état de chargement
+  const { user } = useAuth();
+  
   const [loading, setLoading] = useState(true);
+  const [commandeInfo, setCommandeInfo] = useState(null);
+  const [userName, setUserName] = useState("");
+  const [error, setError] = useState(null);
 
-  // Simuler un appel réseau (exemple avec setTimeout)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false); // L'action asynchrone est terminée (simulée ici)
-    }, 2000); // Délai de 2 secondes
+    const fetchCommandeInfo = async () => {
+      try {
+        // Récupération de la dernière commande de l'utilisateur
+        const commandeResponse = await axios.get('https://tchopshap.onrender.com/commande');
+        const commandes = commandeResponse.data;
+        const userCommande = commandes
+          .filter(cmd => cmd.idUtilisateur === user.id)
+          .sort((a, b) => new Date(b.date_com) - new Date(a.date_com))[0];
 
-    return () => clearTimeout(timer); // Nettoyage du timer si le composant est démonté
-  }, []);
+        if (userCommande) {
+          setCommandeInfo(userCommande);
+          
+          // Récupération des informations de l'utilisateur
+          const userResponse = await axios.get(`https://tchopshap.onrender.com/utilisateurs/${userCommande.idUtilisateur}`);
+          setUserName(userResponse.data.nom);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des informations:", err);
+        setError("Une erreur est survenue lors de la récupération des informations de la commande.");
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchCommandeInfo();
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div>
+        <Header />
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "80vh",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      </div>
+    );
+  }
 
   return (
     <div>
       <Header />
-
       <Box
         sx={{
           backgroundColor: "#f8f9fa",
@@ -42,117 +86,93 @@ export default function Confirm() {
         }}
       >
         <Container maxWidth="sm">
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            mb={3}
-            textAlign={isMobile ? "center" : "left"}
-          >
-            Confirmation de commande
-          </Typography>
-
           <Paper
             elevation={3}
             sx={{
-              p: { xs: 3, sm: 4 },
-              borderRadius: "8px",
+              p: 4,
               textAlign: "center",
-              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // léger ombrage ajouté
+              borderRadius: 2,
             }}
           >
-            {loading ? (
-              // Afficher l'indicateur de chargement
-              <CircularProgress size={48} sx={{ color: "#FF6A00", mb: 2 }} />
-            ) : (
-              // Afficher l'icône de confirmation lorsque le chargement est terminé
-              <CheckCircleIcon
-                sx={{
-                  fontSize: { xs: 40, sm: 48 },
-                  color: "#10b981",
-                  mb: 2,
-                }}
-              />
-            )}
+            <CheckCircleIcon
+              sx={{ fontSize: 60, color: "success.main", mb: 2 }}
+            />
+            <Typography variant="h5" gutterBottom fontWeight={'bold'}>
+              Commande Confirmée!
+            </Typography>
 
-            {!loading && (
+            {error ? (
+              <Typography color="error">{error}</Typography>
+            ) : commandeInfo && (
               <>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Commande confirmée !
-                </Typography>
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  marginBottom={3}
-                >
-                  Votre commande a été enregistrée avec succès.
-                </Typography>
-
-                {/* Bloc gris clair avec infos commande */}
-                <Box
-                  sx={{
-                    backgroundColor: "#f1f3f5",
-                    borderRadius: "6px",
-                    p: 2,
-                    textAlign: "left",
-                    mb: 3,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      flexWrap: "wrap",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography variant="body2">Numéro de commande:</Typography>
-                    <Typography variant="body2" fontWeight="bold" color="#4B5563">
-                      ORDER-256261
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                    <Typography variant="body2">Estimation de livraison:</Typography>
-                    <Typography variant="body2" fontWeight="bold" color="#4B5563">
-                      30-45 minutes
-                    </Typography>
-                  </Box>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  Merci {userName} pour votre commande!
+                </Typography>            
+                <Box sx={{ 
+                display: "flex", 
+                justifyContent: "center", 
+                width: "100%"
+              }}>
+              <Box sx={{
+                backgroundColor: "#F9FAFB",
+                width: "100%",
+                maxWidth: "400px",
+                p: 3,
+                borderRadius: 1,
+                mb: 2,
+                boxShadow: "0px 2px 4px rgba(0,0,0,0.05)"
+              }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                  <Typography variant="body1">
+                    Numéro de commande:</Typography>
+                  <Typography variant="body1" fontWeight={'bold'}>
+                    {commandeInfo.idCommande}
+                  </Typography>
                 </Box>
-
-                <Link href="/" underline="none">
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#FF6A00",
-                      "&:hover": { backgroundColor: "#e55d00" },
-                      textTransform: "none",
-                      mb: 2,
-                    }}
-                    aria-label="Retour à l'accueil"
-                  >
-                    Retour à l'accueil
-                  </Button>
-                </Link>
-
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  sx={{
-                    textTransform: "none",
-                    borderColor: "#ccc",
-                  }}
-                  aria-label="Commander à nouveau"
-                >
-                  Commander à nouveau
-                </Button>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                  <Typography variant="body1">
+                    Date de commande:</Typography>
+                  <Typography variant="body1" fontWeight={'bold'}>
+                    {new Date(commandeInfo.date_com).toLocaleDateString()}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body1">
+                    Mode de paiement:</Typography>
+                  <Typography variant="body1" fontWeight={'bold'}>
+                    {commandeInfo.modeDePaiement}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
               </>
             )}
+
+            <Box sx={{ mt: 4 }}>
+              <Button
+                component={Link}
+                href="/"
+                variant="contained"
+                color="primary"
+                sx={{  backgroundColor:"#F97316",width:"100%" }}
+              >
+                Retour à l'accueil
+              </Button>
+            </Box>
+             <Box sx={{ mt:2}}>
+              <Button
+                component={Link}
+                href="/restaurants"
+                variant="contained"
+                color="black"
+                sx={{  backgroundColor:"#FFFFFF", width:"100%" }}
+              >
+                Commander à nouveau
+              </Button>
+            </Box>
           </Paper>
         </Container>
       </Box>
-
       <Footer />
     </div>
   );

@@ -27,9 +27,7 @@ export default function Panier() {
   const fraisLivraison = 500;
   const [loading, setLoading] = useState(false);
   
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const isMediumScreen = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const theme = useTheme();  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   const formatPrix = (prix) => {
     if (prix == null) return "0 XOF";
@@ -51,25 +49,7 @@ export default function Panier() {
       updateCartItem(idPlat, nouvelleQuantite);
     }
   };
-
-  const validateCommande = () => {
-    if (!user || !user.id) {
-      console.log("Utilisateur non connecté");
-      return false;
-    }
-
-    if (!cartItems || cartItems.length === 0) {
-      console.log("Panier vide");
-      return false;
-    }
-
-    if (!cartItems[0]?.plat?.idPlat) {
-      console.log("ID du plat manquant");
-      return false;
-    }
-
-    return true;
-  };
+  // Fonction supprimée car non utilisée
 
   const handleCommander = async () => {
     if (!user) {
