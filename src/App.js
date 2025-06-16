@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { ThemeProvider } from './theme/ThemeProvider';
+import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import LoadingScreen from "./components/LoadingScreen";
 
@@ -73,11 +75,15 @@ const AppContent = () => {
 
 function App() {
   return (
-    <CartProvider>
+    <ThemeProvider>
       <Router>
-        <AppContent />
+        <AuthProvider>
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </AuthProvider>
       </Router>
-    </CartProvider>
+    </ThemeProvider>
   );
 }
 

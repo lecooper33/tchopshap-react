@@ -1,102 +1,225 @@
-import { 
-  Box,
-  Grid,
-  Paper,
-  Typography,
-  Button,
-  CircularProgress,
-  Snackbar,
-  Alert
+import {
+  Box, Grid, Paper, Typography, Button, CircularProgress,
+  Snackbar, Alert, Table, TableBody, TableCell, 
+  TableContainer, TableHead, TableRow, MenuItem,
+  Select, FormControl, InputLabel
 } from "@mui/material";
 import {
-  Restaurant,
-  Fastfood,
-  ShoppingCart,
-  Category,
-  DeliveryDining,
-  LocalShipping
+  Restaurant, Fastfood, ShoppingCart,
+  TrendingUp, TrendingDown, AttachMoney
 } from "@mui/icons-material";
-import { useEffect, useState, useRef } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, LineChart, Line } from 'recharts';
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { format, subDays, startOfDay, isValid, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
+
+const StatCard = ({ title, count, icon, color, route, trend, subtitle }) => {
+  const navigate = useNavigate();
+  return (
+    <Paper
+      elevation={3}
+      sx={{
+        p: 3,
+        height: '100%',
+        background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+        color: "white",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 1,
+        borderRadius: 2,
+        transition: "transform 0.3s ease",
+        "&:hover": {
+          transform: "translateY(-5px)",
+        }
+      }}
+    >
+      <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+        <Box display="flex" alignItems="center" gap={1}>
+          {icon}
+          <Typography variant="h6">{title}</Typography>
+        </Box>
+        {trend && (
+          <Box display="flex" alignItems="center" gap={0.5}>
+            {trend > 0 ? 
+              <TrendingUp sx={{ color: "#4caf50" }} /> : 
+              <TrendingDown sx={{ color: "#f44336" }} />
+            }
+            <Typography variant="body2">
+              {Math.abs(trend)}%
+            </Typography>
+          </Box>
+        )}
+      </Box>
+      <Typography variant="h4" sx={{ fontWeight: "bold" }}>{count}</Typography>
+      {subtitle && (
+        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+          {subtitle}
+        </Typography>
+      )}
+      <Button
+        variant="contained"
+        size="small"
+        sx={{
+          mt: 1,
+          bgcolor: "rgba(255,255,255,0.9)",
+          color,
+          "&:hover": {
+            bgcolor: "white",
+          }
+        }}
+        onClick={() => navigate(route)}
+      >
+        Voir plus
+      </Button>
+    </Paper>
+  );
+};
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
     restaurant: [],
     plat: [],
     commande: [],
-    categorie: [],
-    livreur: [],
-    livraison: [],
+    users: []
   });
   const [loading, setLoading] = useState(true);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifMessage, setNotifMessage] = useState("");
+  const [periodFilter, setPeriodFilter] = useState(7); // 7 jours par défaut
   const previousCommandeIds = useRef(new Set());
-
+  const [dailyStats, setDailyStats] = useState([]);
+  const [userCommands, setUserCommands] = useState([]);
+  const userId = parseInt(localStorage.getItem("userId"));
   const navigate = useNavigate();
 
-  const fetchStats = async () => {
+  const calculateStats = useCallback((commands) => {
+    const today = startOfDay(new Date());
+    const todayCommands = commands.filter(cmd => {
+      if (!cmd.date_com) return false;
+      try {
+        const commandDate = parseISO(cmd.date_com);
+        return isValid(commandDate) && startOfDay(commandDate).getTime() === today.getTime();
+      } catch (error) {
+        return false;
+      }
+    });
+
+    const totalAmount = commands.reduce((sum, cmd) => sum + (cmd.montant || 0), 0);
+    const todayAmount = todayCommands.reduce((sum, cmd) => sum + (cmd.montant || 0), 0);
+
+    return {
+      todayCommands: todayCommands.length,
+      todayAmount,
+      totalAmount,
+      avgOrderValue: commands.length ? totalAmount / commands.length : 0
+    };
+  }, []);
+
+  const fetchStats = useCallback(async () => {
     try {
-      const [
-        resRestaurant,
-        resPlat,
-        resCommande,
-        resCategorie,
-        resLivreur,
-        resLivraison,
-      ] = await Promise.all([
+      const [resRestaurant, resPlat, resCommande, resUsers] = await Promise.all([
         axios.get("https://tchopshap.onrender.com/restaurant"),
         axios.get("https://tchopshap.onrender.com/plat"),
         axios.get("https://tchopshap.onrender.com/commande"),
-        axios.get("https://tchopshap.onrender.com/categorie"),
-
+        axios.get("https://tchopshap.onrender.com/utilisateurs")
       ]);
 
-      // Détection nouvelles commandes
-      const currentCommandeIds = new Set(resCommande.data.map(c => c._id));
-      // Trouver les commandes présentes maintenant mais pas avant
-      const newCommandes = [...currentCommandeIds].filter(id => !previousCommandeIds.current.has(id));
+      // Filtrer les restaurants de l'utilisateur connecté
+      const userRestaurants = resRestaurant.data.filter(resto => resto.idUtilisateur === userId);
+      
+      // Filtrer les plats des restaurants de l'utilisateur
+      const restaurantIds = userRestaurants.map(resto => resto.idRestaurant);
+      const userPlats = resPlat.data.filter(plat => restaurantIds.includes(plat.idRestaurant));
+      
+      // Filtrer les commandes des plats des restaurants de l'utilisateur
+      const platIds = userPlats.map(plat => plat.idPlat);
+      const userCommandes = resCommande.data.filter(cmd => platIds.includes(cmd.idPlat));
 
-      if (newCommandes.length > 0) {
-        setNotifMessage(`Nouvelle commande reçue (${newCommandes.length}) !`);
+      const newStats = {
+        restaurant: userRestaurants,
+        plat: userPlats,
+        commande: userCommandes,
+        users: resUsers.data
+      };
+
+      // Vérifier les nouvelles commandes
+      const currentCommandeIds = new Set(newStats.commande.map((cmd) => cmd.idCommande));
+      const hasNewCommandes = [...currentCommandeIds].some(
+        (id) => !previousCommandeIds.current.has(id)
+      );
+
+      if (hasNewCommandes) {
+        setNotifMessage("Nouvelle(s) commande(s) reçue(s) !");
         setNotifOpen(true);
       }
 
       previousCommandeIds.current = currentCommandeIds;
 
-      setStats({
-        restaurant: resRestaurant.data,
-        plat: resPlat.data,
-        commande: resCommande.data,
-        categorie: resCategorie.data,
+      // Préparer les données pour les graphiques des derniers jours
+      const lastDays = Array.from({ length: periodFilter }, (_, i) => {
+        const date = subDays(new Date(), i);
+        const dayStr = format(date, 'EEEE', { locale: fr });
+        const dayCommands = newStats.commande.filter(cmd => {
+          if (!cmd.date_com) return false;
+          try {
+            const commandDate = parseISO(cmd.date_com);
+            return isValid(commandDate) && 
+                   startOfDay(commandDate).getTime() === startOfDay(date).getTime();
+          } catch (error) {
+            console.error("Date invalide:", cmd.date_com);
+            return false;
+          }
+        });
+        
+        return {
+          name: dayStr,
+          commandes: dayCommands.length,
+          montant: dayCommands.reduce((sum, cmd) => sum + (cmd.montant || 0), 0)
+        };
+      }).reverse();
 
-      });
+      setDailyStats(lastDays);
 
+      // Préparer les données des commandes avec les informations utilisateur
+      const commandesWithUserInfo = newStats.commande.map(cmd => {
+        const user = newStats.users.find(u => u.idUtilisateur === cmd.idUtilisateur);
+        const plat = newStats.plat.find(p => p.idPlat === cmd.idPlat);
+        return {
+          ...cmd,
+          userName: user ? `${user.nom} ${user.prenom || ''}` : 'Utilisateur inconnu',
+          platNom: plat ? plat.nom : 'Plat inconnu',
+        };
+      }).sort((a, b) => new Date(b.date_com) - new Date(a.date_com));
+
+      setUserCommands(commandesWithUserInfo);
+      setStats(newStats);
       setLoading(false);
     } catch (error) {
-      console.error("Erreur lors du chargement des statistiques :", error);
+      console.error("Erreur lors du chargement des statistiques:", error);
       setLoading(false);
     }
-  };
+  }, [userId, periodFilter]);
 
   useEffect(() => {
     fetchStats();
-
-    // Polling toutes les 30 secondes pour vérifier les nouvelles commandes
     const interval = setInterval(fetchStats, 30000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchStats]);
 
-  const statCards = [
+  const calculatedStats = useMemo(() => calculateStats(stats.commande), [stats.commande, calculateStats]);
+
+  const statCards = useMemo(() => [
     {
       title: "Restaurants",
       icon: <Restaurant />,
       count: stats.restaurant.length,
       color: "#1976d2",
       route: "/admin/restaurants",
+      trend: 12
     },
     {
       title: "Plats",
@@ -104,83 +227,177 @@ export default function Dashboard() {
       count: stats.plat.length,
       color: "#d32f2f",
       route: "/admin/plats",
+      trend: 8
     },
     {
-      title: "Commandes",
+      title: "Commandes du jour",
       icon: <ShoppingCart />,
-      count: stats.commande.length,
+      count: calculatedStats.todayCommands,
+      subtitle: `${calculatedStats.todayAmount.toLocaleString()} FCFA`,
       color: "#388e3c",
       route: "/admin/commandes",
+      trend: 15
     },
     {
-      title: "Catégories",
-      icon: <Category />,
-      count: stats.categorie.length,
+      title: "Chiffre d'affaires",
+      icon: <AttachMoney />,
+      count: `${calculatedStats.totalAmount.toLocaleString()} FCFA`,
+      subtitle: `Moy. par commande: ${Math.round(calculatedStats.avgOrderValue).toLocaleString()} FCFA`,
       color: "#f57c00",
-      route: "/admin/categories",
-    },
+      route: "/admin/commandes",
+      trend: 20
+    }
+  ], [stats, calculatedStats]);
 
-  ];
-
-  return ( 
+  return (
     <AdminLayout>
-      <Typography variant="h4" gutterBottom>Tableau de bord</Typography>
+      <Box sx={{ flexGrow: 1 }}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: "bold" }}>
+          Tableau de bord
+        </Typography>
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-          <CircularProgress size={60} color="#FFA500" />
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          {statCards.map((card, index) => (
-            <Grid  xs={12} sm={6} md={4} key={index}>
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 3,
-                  bgcolor: card.color,
-                  color: "white",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: 1,
-                  borderRadius: 2
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={1}>
-                  {card.icon}
-                  <Typography variant="h6">{card.title}</Typography>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+            <CircularProgress size={60} sx={{ color: "orange" }} />
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {/* Cartes statistiques */}
+            {statCards.map((card, index) => (
+              <Grid item xs={12} sm={6} md={3} key={index}>
+                <StatCard {...card} />
+              </Grid>
+            ))}
+
+            {/* Filtre de période et graphique des commandes */}
+            <Grid item xs={12}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6">
+                    Évolution des commandes
+                  </Typography>
+                  <FormControl sx={{ minWidth: 200 }}>
+                    <InputLabel>Période</InputLabel>
+                    <Select
+                      value={periodFilter}
+                      label="Période"
+                      onChange={(e) => setPeriodFilter(e.target.value)}
+                    >
+                      <MenuItem value={7}>7 derniers jours</MenuItem>
+                      <MenuItem value={14}>14 derniers jours</MenuItem>
+                      <MenuItem value={30}>30 derniers jours</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
-                <Typography variant="h4">{card.count}</Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{ mt: 1, bgcolor: "white", color: card.color }}
-                  onClick={() => navigate(card.route)}
-                >
-                  Voir plus
-                </Button>
+                <Box sx={{ width: '100%', height: 300, overflowX: 'auto' }}>
+                  <LineChart
+                    width={Math.max(800, dailyStats.length * 100)}
+                    height={300}
+                    data={dailyStats}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <RechartsTooltip />
+                    <Legend />
+                    <Line 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="commandes" 
+                      name="Nombre de commandes"
+                      stroke="#8884d8" 
+                      activeDot={{ r: 8 }} 
+                    />
+                    <Line 
+                      yAxisId="right"
+                      type="monotone" 
+                      dataKey="montant" 
+                      name="Montant (FCFA)"
+                      stroke="#82ca9d" 
+                      activeDot={{ r: 8 }} 
+                    />
+                  </LineChart>
+                </Box>
               </Paper>
             </Grid>
-          ))}
-        </Grid>
-      )}
 
-      {/* Notification Snackbar */}
-      <Snackbar
-        open={notifOpen}
-        autoHideDuration={6000}
-        onClose={() => setNotifOpen(false)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert
+            {/* Tableau des dernières commandes */}
+            <Grid item xs={12}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Dernières commandes
+                </Typography>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID Commande</TableCell>
+                        <TableCell>Client</TableCell>
+                        <TableCell>Plat</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Montant</TableCell>
+                        <TableCell>Statut</TableCell>
+                        <TableCell>Mode de paiement</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {userCommands.slice(0, 10).map((cmd) => (
+                        <TableRow key={cmd.idCommande}>
+                          <TableCell>#{cmd.idCommande}</TableCell>
+                          <TableCell>{cmd.userName}</TableCell>
+                          <TableCell>{cmd.platNom}</TableCell>
+                          <TableCell>
+                            {cmd.date_com ? format(parseISO(cmd.date_com), 'Pp', { locale: fr }) : 'Date non disponible'}
+                          </TableCell>
+                          <TableCell>{cmd.montant ? `${cmd.montant.toLocaleString()} FCFA` : '-'}</TableCell>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                backgroundColor: 
+                                  cmd.statut === 'en préparation' ? '#fff3cd' :
+                                  cmd.statut === 'livré' ? '#d4edda' :
+                                  '#f8d7da',
+                                color: 
+                                  cmd.statut === 'en préparation' ? '#856404' :
+                                  cmd.statut === 'livré' ? '#155724' :
+                                  '#721c24',
+                                px: 2,
+                                py: 0.5,
+                                borderRadius: 1,
+                                display: 'inline-block'
+                              }}
+                            >
+                              {cmd.statut}
+                            </Box>
+                          </TableCell>
+                          <TableCell>{cmd.modeDePaiement}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
+            </Grid>
+          </Grid>
+        )}
+
+        <Snackbar
+          open={notifOpen}
+          autoHideDuration={6000}
           onClose={() => setNotifOpen(false)}
-          severity="info"
-          sx={{ width: '100%' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          {notifMessage}
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={() => setNotifOpen(false)}
+            severity="info"
+            sx={{ width: '100%' }}
+          >
+            {notifMessage}
+          </Alert>
+        </Snackbar>
+      </Box>
     </AdminLayout>
   );
 }
