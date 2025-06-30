@@ -17,7 +17,7 @@ import {
   CardMedia,
   CardContent,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios"; // Import axios
 
 const Resto = () => {
@@ -28,6 +28,7 @@ const Resto = () => {
   const [sortBy, setSortBy] = useState("Popularité");
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   // Dynamic category retrieval
   useEffect(() => {
@@ -58,6 +59,15 @@ const Resto = () => {
     };
     fetchR();
   }, []);
+
+  // Appliquer le filtre catégorie depuis l'URL si présent
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('categorie');
+    if (cat && categories.includes(cat)) {
+      setActiveCategory(cat);
+    }
+  }, [location.search, categories]);
 
   const getCatNom = (id) => {
     const cat = catData.find((c) => c.idCategorie === id);

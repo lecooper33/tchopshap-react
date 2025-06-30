@@ -12,10 +12,12 @@ import {
   Skeleton,
 } from "@mui/material";
 import { RiArrowRightSLine } from "react-icons/ri";
+import { useNavigate } from "react-router-dom";
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchCategories = async () => {
     try {
@@ -122,11 +124,11 @@ const CategoryList = () => {
         >
           {categories.map((category, index) => (
             <Grid
-              
               xs={12}
-              key={category.id || category.categorie || index} // Clé unique avec fallback
+              key={category.id || category.categorie || index}
             >
               <Card
+                onClick={() => navigate(`/restaurants?categorie=${encodeURIComponent(category.categorie)}`)}
                 sx={{
                   height: "100%",
                   display: "flex",

@@ -20,13 +20,14 @@ import {
 } from "@mui/material";
 import { ShoppingCart } from "@mui/icons-material";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "./Header"
 import Footer from "./Footer"
 import { useCart } from "../context/CartContext";
 
 const PlatCard = () => {
   const { idRestaurant } = useParams();
+  const location = useLocation();
   const [plats, setPlats] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
   const [categoriesData, setCategoriesData] = useState([]);
@@ -73,6 +74,13 @@ const PlatCard = () => {
       .catch(console.error);
   }, [idRestaurant]);
 
+  // Récupérer la catégorie depuis l'URL si présente
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('categorie');
+    if (cat) setSelectedCat(cat);
+  }, [location.search]);
+
   // Options de catégories (noms récupérés de l'API)
   const categories = [
     "Toutes les catégories",
@@ -113,181 +121,182 @@ const PlatCard = () => {
   };
 
   return (
-    <div>
+    <>
       <Header/>
-    <Box sx={{ p: { xs: 2, md: 3 } }}>      <Typography variant="h5" fontWeight={600} mb={2}>
-        {selectedCat !== "Toutes les catégories"
-          ? `Plats - ${selectedCat}`
-          : idRestaurant
-          ? `Plats de ${restaurantName || `#${idRestaurant}`}`
-          : "Tous nos plats"}
-      </Typography>
-
-      <Paper
-        sx={{
-          p: 2,
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: 2,
-          borderRadius: 3,
-          boxShadow: 1,
-        }}
-      >
-        <TextField
-          placeholder="Rechercher un plat..."
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ flex: 1, minWidth: 180 }}
-        />
-
-        <FormControl size="small" sx={{ minWidth: 180 }}>
-          <Select
-            value={selectedCat}
-            displayEmpty
-            onChange={(e) => setSelectedCat(e.target.value)}
-          >
-            {categories.map((cat) => (
-              <MenuItem key={cat} value={cat}>
-                {cat}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2">Prix :</Typography>
-          <TextField
-            size="small"
-            type="number"
-            placeholder="Min"
-            value={prixMin}
-            onChange={(e) => setPrixMin(e.target.value)}
-            sx={{ width: 70 }}
-          />
-          <Typography variant="body2">-</Typography>
-          <TextField
-            size="small"
-            type="number"
-            placeholder="Max"
-            value={prixMax}
-            onChange={(e) => setPrixMax(e.target.value)}
-            sx={{ width: 70 }}
-          />
-          <Typography variant="body2">FCFA</Typography>
-        </Box>
-      </Paper>
-
       <Box sx={{ p: { xs: 2, md: 3 } }}>
-        <Grid container spacing={3} display="grid" gridTemplateColumns={{
-          xs: "1fr",
-          sm: "1fr 1fr",
-          md: "1fr 1fr",
-          lg: "1fr 1fr",
-        }}>
-          {loading
-            ? Array.from(new Array(4)).map((_, i) => (
-                <Grid item key={i} xs={12}>
-                  <Card
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 3,
-                      boxShadow: 1,
-                      p: 2,
-                    }}
-                  >
-                    <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
-                    <Skeleton height={30} sx={{ mt: 2 }} />
-                    <Skeleton height={20} width="80%" />
-                    <Skeleton height={20} width="40%" sx={{ mt: 1 }} />
-                  </Card>
-                </Grid>
-              ))
-            : filtres.map((plat) => (
-                <Grid item key={plat.idPlat} xs={12}>
-                  <Card
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 3,
-                      boxShadow: 3,
-                      transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: 6,
-                      },
-                    }}
-                  >
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={plat.image}
-                      alt={plat.nom}
-                      sx={{
-                        objectFit: "cover",
-                        borderTopLeftRadius: 12,
-                        borderTopRightRadius: 12,
-                      }}
-                    />
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {plat.nom}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {plat.details}
-                      </Typography>
-                      <Box
-                        sx={{
-                          mt: 2,
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          {plat.prix.toLocaleString()} FCFA
-                        </Typography>                        <Stack direction="row" spacing={1}>
-                          <Button
-                            variant="contained"
-                            color="warning"
-                            size="small"
-                            onClick={() => handleAddToCart(plat)}
-                          >
-                            Ajouter
-                          </Button>
-                          {platSelectionne && cartCount > 0 && (
-                            <IconButton
-                              size="small"
-                              onClick={() => navigate('/Cart')}
-                              sx={{
-                                backgroundColor: 'orange',
-                                color: 'white',
-                                '&:hover': {
-                                  backgroundColor: 'darkorange',
-                                }
-                              }}
-                            >
-                              <Badge badgeContent={cartCount} color="error">
-                                <ShoppingCart fontSize="small" />
-                              </Badge>
-                            </IconButton>
-                          )}
-                        </Stack>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
+        <Typography variant="h5" fontWeight={600} mb={2}>
+          {selectedCat !== "Toutes les catégories"
+            ? `Plats - ${selectedCat}`
+            : idRestaurant
+            ? `Plats de ${restaurantName || `#${idRestaurant}`}`
+            : "Tous nos plats"}
+        </Typography>
+
+        <Paper
+          sx={{
+            p: 2,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 2,
+            borderRadius: 3,
+            boxShadow: 1,
+          }}
+        >
+          <TextField
+            placeholder="Rechercher un plat..."
+            variant="outlined"
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ flex: 1, minWidth: 180 }}
+          />
+
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <Select
+              value={selectedCat}
+              displayEmpty
+              onChange={(e) => setSelectedCat(e.target.value)}
+            >
+              {categories.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
+                </MenuItem>
               ))}
-        </Grid>
+            </Select>
+          </FormControl>
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2">Prix :</Typography>
+            <TextField
+              size="small"
+              type="number"
+              placeholder="Min"
+              value={prixMin}
+              onChange={(e) => setPrixMin(e.target.value)}
+              sx={{ width: 70 }}
+            />
+            <Typography variant="body2">-</Typography>
+            <TextField
+              size="small"
+              type="number"
+              placeholder="Max"
+              value={prixMax}
+              onChange={(e) => setPrixMax(e.target.value)}
+              sx={{ width: 70 }}
+            />
+            <Typography variant="body2">FCFA</Typography>
+          </Box>
+        </Paper>
+
+        <Box sx={{ p: { xs: 2, md: 3 } }}>
+          <Grid container spacing={3} display="grid" gridTemplateColumns={{
+            xs: "1fr",
+            sm: "1fr 1fr",
+            md: "1fr 1fr",
+            lg: "1fr 1fr",
+          }}>
+            {loading
+              ? Array.from(new Array(4)).map((_, i) => (
+                  <Grid item key={i} xs={12}>
+                    <Card
+                      sx={{
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: 3,
+                        boxShadow: 1,
+                        p: 2,
+                      }}
+                    >
+                      <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+                      <Skeleton height={30} sx={{ mt: 2 }} />
+                      <Skeleton height={20} width="80%" />
+                      <Skeleton height={20} width="40%" sx={{ mt: 1 }} />
+                    </Card>
+                  </Grid>
+                ))
+              : filtres.map((plat) => (
+                  <Grid item key={plat.idPlat} xs={12}>
+                    <Card
+                      sx={{
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: 3,
+                        boxShadow: 3,
+                        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          boxShadow: 6,
+                        },
+                      }}
+                    >
+                      <CardMedia
+                        component="img"
+                        height="200"
+                        image={plat.image}
+                        alt={plat.nom}
+                        sx={{
+                          objectFit: "cover",
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12,
+                        }}
+                      />
+                      <CardContent sx={{ flexGrow: 1 }}>
+                        <Typography variant="h6" fontWeight="bold">
+                          {plat.nom}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          {plat.details}
+                        </Typography>
+                        <Box
+                          sx={{
+                            mt: 2,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {plat.prix.toLocaleString()} FCFA
+                          </Typography>                        <Stack direction="row" spacing={1}>
+                            <Button
+                              variant="contained"
+                              color="warning"
+                              size="small"
+                              onClick={() => handleAddToCart(plat)}
+                            >
+                              Ajouter
+                            </Button>
+                            {platSelectionne && cartCount > 0 && (
+                              <IconButton
+                                size="small"
+                                onClick={() => navigate('/Cart')}
+                                sx={{
+                                  backgroundColor: 'orange',
+                                  color: 'white',
+                                  '&:hover': {
+                                    backgroundColor: 'darkorange',
+                                  }
+                                }}
+                              >
+                                <Badge badgeContent={cartCount} color="error">
+                                  <ShoppingCart fontSize="small" />
+                                </Badge>
+                              </IconButton>
+                            )}
+                          </Stack>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+          </Grid>
+        </Box>
       </Box>
-    </Box>
-    <Footer/>
-    </div>
+      <Footer/>
+    </>
   );
 };
 
