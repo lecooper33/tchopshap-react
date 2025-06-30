@@ -11,6 +11,7 @@ import {
   CircularProgress, useMediaQuery, ThemeProvider, createTheme
 } from '@mui/material';
 import { orange, deepOrange, grey } from '@mui/material/colors';
+import { useNavigate } from "react-router-dom";
 
 // Thème personnalisé
 const theme = createTheme({
@@ -29,6 +30,7 @@ const theme = createTheme({
 
 export default function User() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ nom: user?.nom || "", email: user?.email || "", password: "" });
   const [commandes, setCommandes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -59,8 +61,16 @@ export default function User() {
     e.preventDefault();
     try {
       await axios.put(`https://tchopshap.onrender.com/utilisateurs/${user.id}`, form);
-      setMessage({ text: "Informations mises à jour avec succès !", type: "success" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      if (form.password) {
+        setMessage({ text: "Changement effectué ! Veuillez valider le code OTP envoyé à votre email pour vérifier votre compte.", type: "success" });
+        setTimeout(() => {
+          setMessage({ text: "", type: "" });
+          navigate("/otp");
+        }, 3000);
+      } else {
+        setMessage({ text: "Informations mises à jour avec succès !", type: "success" });
+        setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      }
     } catch {
       setMessage({ text: "Erreur lors de la mise à jour", type: "error" });
     }
