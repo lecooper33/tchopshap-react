@@ -30,7 +30,7 @@ function PlatsForm() {
         const userRestaurants = res.data.filter(r => r.idUtilisateur === userId);
         setRestaurants(userRestaurants);
       })
-      .catch(err => console.error("❌ Erreur de récupération des restaurants :", err));
+      .catch(err => console.error(" Erreur de récupération des restaurants :", err));
   }, [userId]);
 
   const handleOpen = () => setOpen(true);

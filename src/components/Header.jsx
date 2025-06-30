@@ -1,68 +1,71 @@
 import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+
+// MUI Components
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Badge,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  useMediaQuery,
-  useTheme,
-  Divider,
-  Avatar,
+  AppBar, Toolbar, Typography, Button, Box, Badge, IconButton, Drawer,
+  List, ListItem, ListItemIcon, ListItemText, useMediaQuery, useTheme,
+  Divider, Avatar, Chip,
 } from "@mui/material";
-import HomeIcon from "@mui/icons-material/Home";
-import RestaurantIcon from "@mui/icons-material/Restaurant";
-import FastfoodIcon from "@mui/icons-material/Fastfood";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { LuShoppingCart } from "react-icons/lu";
-import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+
+// MUI Icons
+import {
+  Home as HomeIcon,
+  Restaurant as RestaurantIcon,
+  Fastfood as FastfoodIcon,
+  Person as PersonIcon,
+  Menu as MenuIcon,
+  Close as CloseIcon,
+  Logout as LogoutIcon,
+  ShoppingCart as ShoppingCartIcon,
+} from "@mui/icons-material";
+
+// Contextes
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+
+// Navigation
+const navItems = [
+  { text: "Accueil", to: "/", icon: <HomeIcon /> },
+  { text: "Restaurants", to: "/restaurants", icon: <RestaurantIcon /> },
+  { text: "Menu", to: "/platcard", icon: <FastfoodIcon /> },
+];
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTabletOrMore = useMediaQuery(theme.breakpoints.up("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const toggleDrawer = () => {
-    setDrawerOpen((prev) => !prev);
-  };
+  const toggleDrawer = () => setDrawerOpen(prev => !prev);
 
   const handleLogout = () => {
     logout();
     toggleDrawer();
+    navigate("/");
   };
-
-  const navItems = [
-    { text: "Accueil", to: "/", icon: <HomeIcon /> },
-    { text: "Restaurants", to: "/restaurants", icon: <RestaurantIcon /> },
-    { text: "Plats", to: "/platcard", icon: <FastfoodIcon /> },
-  ];
 
   return (
     <AppBar
-      position="static"
-      color="default"
+      position="sticky"
       elevation={0}
       sx={{
-        backgroundColor: "#fff",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-        borderBottom: "1px solid rgba(0,0,0,0.08)",
+        width: '100vw',
+        maxWidth: '100vw',
+        left: 0,
+        overflow: 'hidden',
+        backgroundColor: "background.paper",
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        backdropFilter: "blur(8px)",
+        background: "rgba(255, 255, 255, 0.8)",
+        paddingRight: {xs: 2, md: 15}, // Adjust padding for mobile and desktop
       }}
     >
       <Toolbar
@@ -70,34 +73,43 @@ const Header = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          px: { xs: 2, md: 4 },
+          px: { xs: 2, md: 6 },
           py: 1,
+          mx: "auto",
+          width: "100%",
         }}
       >
         {/* Logo */}
-        <Typography
-          variant="h6"
+        <Box
           onClick={() => navigate("/")}
           sx={{
-            fontWeight: 800,
-            color: "orange",
-            cursor: "pointer",
-            fontSize: { xs: "1.3rem", sm: "1.5rem" },
-            letterSpacing: -0.5,
             display: "flex",
             alignItems: "center",
             gap: 1,
+            cursor: "pointer",
           }}
         >
-          TchôpShap
-        </Typography>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 800,
+              background: "linear-gradient(45deg, #FF6B00 30%, #FFA800 90%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              letterSpacing: -0.5,
+            }}
+          >
+            TchôpShap
+          </Typography>
+        </Box>
 
-        {/* Navigation desktop */}
-        {isTabletOrMore && (
+        {/* Navigation Desktop */}
+        {isDesktop && (
           <Box
             sx={{
               display: "flex",
-              gap: 1,
+              gap: 0.5,
               flex: 1,
               justifyContent: "center",
               mx: 4,
@@ -111,14 +123,25 @@ const Header = () => {
                 color="inherit"
                 sx={{
                   textTransform: "none",
-                  fontWeight: 500,
-                  color:
-                    location.pathname === to ? "orange" : "text.primary",
+                  fontSize: 16,
+                  color: location.pathname === to ? "primary.main" : "text.primary",
                   borderRadius: 2,
-                  px: 2,
+                  px: 3,
                   py: 1,
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 165, 0, 0.08)",
+                  position: "relative",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    bottom: 0,
+                    left: "50%",
+                    transform: location.pathname === to ? "translateX(-50%) scaleX(1)" : "translateX(-50%) scaleX(0)",
+                    width: "60%",
+                    height: 3,
+                    backgroundColor: "primary.main",
+                    transition: "transform 0.3s ease",
+                  },
+                  "&:hover::after": {
+                    transform: "translateX(-50%) scaleX(1)",
                   },
                 }}
               >
@@ -131,88 +154,71 @@ const Header = () => {
         {/* Actions */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {/* Panier */}
-          <IconButton
-            onClick={() => navigate("/Cart")}
-            sx={{
-              p: 1.5,
-              "&:hover": {
-                backgroundColor: "rgba(255, 165, 0, 0.08)",
-              },
-            }}
-          >
-            <Badge badgeContent={cartCount} color="error">
-              <LuShoppingCart style={{ width: 24, height: 24 }} />
+          <IconButton onClick={() => navigate("/Cart")}>
+            <Badge badgeContent={cartCount} color="primary">
+              <ShoppingCartIcon sx={{ color: "text.primary" }} />
             </Badge>
           </IconButton>
 
-          {/* Utilisateur connecté */}
+          {/* Utilisateur */}
           {user ? (
-            isTabletOrMore && (
-              <Box display={"flex"} gap={2} alignItems="center" ml={1}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Bonjour
-                  </Typography>
-                  <Typography
-                    sx={{ fontWeight: 600, color: "text.primary" }}
-                  >
-                    {user.nom}
-                  </Typography>
-                </Box>
+            isDesktop ? (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Chip
+                  avatar={<Avatar sx={{ bgcolor: "primary.main" }}>{user.nom.charAt(0).toUpperCase()}</Avatar>}
+                  label={`Bonjour, ${user.nom.split(' ')[0]}`}
+                  variant="outlined"
+                  onClick={() => navigate("/user")}
+                  sx={{
+                    cursor: 'pointer',
+                    borderColor: "divider",
+                    "&:hover": {
+                      backgroundColor: "action.hover",
+                    },
+                  }}
+                />
                 <Button
                   onClick={logout}
-                  variant="text"
+                  startIcon={<LogoutIcon />}
                   sx={{
                     textTransform: "none",
                     color: "text.secondary",
-                    ml: 1,
                     "&:hover": {
-                      color: "orange",
+                      color: "error.main",
                     },
                   }}
                 >
                   Déconnexion
                 </Button>
               </Box>
+            ) : (
+              <IconButton onClick={toggleDrawer}>
+                <MenuIcon />
+              </IconButton>
             )
-          ) : (
-            isTabletOrMore && (
-              <Button
-                component={RouterLink}
-                to="/Profil"
-                color="inherit"
-                state={{ from: location.pathname }}
-                variant="contained"
-                disableElevation
-                sx={{
-                  textTransform: "none",
-                  backgroundColor: "orange",
-                  color: "white",
-                  px: 3,
-                  py: 1,
-                  borderRadius: 2,
-                  "&:hover": {
-                    backgroundColor: "darkorange",
-                  },
-                }}
-              >
-                Connexion
-              </Button>
-            )
-          )}
-
-          {/* Hamburger mobile */}
-          {isMobile && (
-            <IconButton
-              onClick={toggleDrawer}
-              aria-label="Menu mobile"
+          ) : isDesktop ? (
+            <Button
+              component={RouterLink}
+              to="/Profil"
+              state={{ from: location.pathname }}
+              variant="contained"
+              color="primary"
+              startIcon={<PersonIcon />}
               sx={{
-                ml: 1,
+                textTransform: "none",
+                fontWeight: 600,
+                px: 3,
+                borderRadius: 2,
+                boxShadow: "none",
                 "&:hover": {
-                  backgroundColor: "rgba(255, 165, 0, 0.08)",
+                  boxShadow: "none",
                 },
               }}
             >
+              Connexion
+            </Button>
+          ) : (
+            <IconButton onClick={toggleDrawer}>
               <MenuIcon />
             </IconButton>
           )}
@@ -226,108 +232,96 @@ const Header = () => {
         onClose={toggleDrawer}
         PaperProps={{
           sx: {
-            width: "75%",
-            backgroundColor: "#fff",
-            borderTopLeftRadius: "20px",
-            borderBottomLeftRadius: "20px",
+            width: "min(85vw, 250px)",
+            p: 2,
+            boxSizing: "border-box",
+            borderTopLeftRadius: 50,
+            borderBottomLeftRadius: 50,
           },
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            p: 2,
-            borderBottom: "1px solid rgba(0,0,0,0.08)",
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "orange" }}>
-            Menu
-          </Typography>
-          <IconButton onClick={toggleDrawer}>
-            <CloseIcon />
-          </IconButton>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6" fontWeight={700}>Menu</Typography>
+          <IconButton onClick={toggleDrawer}><CloseIcon /></IconButton>
         </Box>
 
-        <List sx={{ py: 0 }}>
+        {/* Utilisateur */}
+        {user && (
+          <Box sx={{ mb: 2, p: 2, bgcolor: "action.hover", borderRadius: 2 ,}}>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Avatar sx={{ bgcolor: "primary.main" }}>{user.nom.charAt(0).toUpperCase()}</Avatar>
+              <Box>
+                <Typography fontWeight={600}>{user.nom}</Typography>
+                <Typography fontSize={13} color="text.secondary">{user.email}</Typography>
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+        <List>
           {navItems.map(({ text, to, icon }) => (
             <ListItem
-              button
               key={text}
+              button
               component={RouterLink}
               to={to}
               onClick={toggleDrawer}
+              selected={location.pathname === to}
               sx={{
-                px: 3,
-                py: 1.5,
-                "&:hover": {
-                  backgroundColor: "rgba(255, 165, 0, 0.08)",
+                borderRadius: 1,
+                mb: 0.5,
+                color: 'black',
+                "&.Mui-selected": {
+                  backgroundColor: "primary.light",
+                  color: "primary.main",
+                  "& .MuiListItemIcon-root": {
+                    color: "primary.main",
+                  },
                 },
-                borderLeft:
-                  location.pathname === to
-                    ? "4px solid orange"
-                    : "4px solid transparent",
               }}
             >
-              <IconButton sx={{ color: "orange", mr: 2 }}>{icon}</IconButton>
-              <ListItemText
-                primary={text}
-                primaryTypographyProps={{
-                  fontWeight: 500,
-                  color: "#000",
-                }}
-              />
+              <ListItemIcon>{icon}</ListItemIcon>
+              <ListItemText primary={text} />
             </ListItem>
           ))}
         </List>
 
-        <Divider sx={{ my: 1 }} />
+        <Divider sx={{ my: 2 }} />
 
         <List>
           {user ? (
             <>
-              <ListItem sx={{ px: 3, py: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: "orange",
-                    mr: 2,
-                  }}
-                >
-                  {user.nom.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Connecté en tant que
-                  </Typography>
-                  <Typography sx={{ fontWeight: 600 }}>
-                    {user.nom}
-                  </Typography>
-                </Box>
+              <ListItem
+                button
+                component={RouterLink}
+                to="/user"
+                onClick={toggleDrawer}
+                sx={{
+                  borderRadius: 1,
+                  bgcolor: "primary.main",
+                  color: "white",
+                  mb: 1,
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: "white" }}><PersonIcon /></ListItemIcon>
+                <ListItemText primary="Mon compte" />
               </ListItem>
               <ListItem
                 button
                 onClick={handleLogout}
                 sx={{
-                  px: 3,
-                  py: 1.5,
+                  borderRadius: 1,
+                  color: "error.main",
                   "&:hover": {
-                    backgroundColor: "rgba(255, 165, 0, 0.08)",
+                    backgroundColor: "#EBF0EC",
                   },
                 }}
               >
-                <IconButton sx={{ color: "orange", mr: 2 }}>
-                  <LogoutIcon />
-                </IconButton>
-                <ListItemText
-                  primary="Déconnexion"
-                  primaryTypographyProps={{
-                    fontWeight: 500,
-                    color: "#000",
-                  }}
-                />
+                <ListItemIcon><LogoutIcon /></ListItemIcon>
+                <ListItemText primary="Déconnexion" />
               </ListItem>
             </>
           ) : (
@@ -336,24 +330,20 @@ const Header = () => {
               component={RouterLink}
               to="/Profil"
               onClick={toggleDrawer}
+              selected={location.pathname === "/Profil"}
               sx={{
-                px: 3,
-                py: 1.5,
+                borderRadius: 1,
+                "&.Mui-selected": {
+                  backgroundColor: "primary.light",
+                  color: "primary.main",
+                },
                 "&:hover": {
-                  backgroundColor: "rgba(255, 165, 0, 0.08)",
+                  backgroundColor: "action.hover",
                 },
               }}
             >
-              <IconButton sx={{ color: "orange", mr: 2 }}>
-                <PersonOutlineIcon />
-              </IconButton>
-              <ListItemText
-                primary="Se Connecter"
-                primaryTypographyProps={{
-                  fontWeight: 500,
-                  color: "#000",
-                }}
-              />
+              <ListItemIcon><PersonIcon /></ListItemIcon>
+              <ListItemText primary="Se connecter" />
             </ListItem>
           )}
         </List>
