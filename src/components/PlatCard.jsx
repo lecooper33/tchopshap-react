@@ -37,6 +37,8 @@ const PlatCard = () => {
   const [prixMin, setPrixMin] = useState("");
   const [prixMax, setPrixMax] = useState("");  const [loading, setLoading] = useState(true);
   const [platSelectionne, setPlatSelectionne] = useState(false);
+  const [lastAddedId, setLastAddedId] = useState(null);
+  const [selectedPlats, setSelectedPlats] = useState([]);
   const navigate = useNavigate();
   const { addToCart, cartCount } = useCart();
 
@@ -113,11 +115,8 @@ const PlatCard = () => {
       return prix >= min && prix <= max;
     });
   const handleAddToCart = (plat) => {
-    addToCart({
-      plat,
-      quantite: 1,
-    });
-    setPlatSelectionne(true);
+    addToCart({ plat, quantite: 1 });
+    setSelectedPlats((prev) => prev.includes(plat.idPlat) ? prev : [...prev, plat.idPlat]);
   };
 
   return (
@@ -260,7 +259,8 @@ const PlatCard = () => {
                         >
                           <Typography variant="subtitle1" fontWeight={600}>
                             {plat.prix.toLocaleString()} FCFA
-                          </Typography>                        <Stack direction="row" spacing={1}>
+                          </Typography>
+                          <Stack direction="row" spacing={1}>
                             <Button
                               variant="contained"
                               color="warning"
@@ -269,7 +269,7 @@ const PlatCard = () => {
                             >
                               Ajouter
                             </Button>
-                            {platSelectionne && cartCount > 0 && (
+                            {selectedPlats.includes(plat.idPlat) && (
                               <IconButton
                                 size="small"
                                 onClick={() => navigate('/Cart')}
