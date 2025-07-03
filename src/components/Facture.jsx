@@ -6,7 +6,8 @@ import {
   TextField,
   Typography,
   Checkbox,
-  Button
+  Button,
+  Avatar
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -22,9 +23,9 @@ export default function Facture() {
   const [modePaiement, setModePaiement] = useState("");
   
   // États pour les informations de livraison
-  const [nomComplet, setNomComplet] = useState("");
+  const [nomComplet, setNomComplet] = useState(user?.nom || "");
   const [adresse, setAdresse] = useState("");
-  const [telephone, setTelephone] = useState("");
+  const [telephone, setTelephone] = useState(user?.numeroDeTel || "");
   const [instructions, setInstructions] = useState("");
   
   // Récupération des données du state
@@ -72,6 +73,14 @@ export default function Facture() {
 
     fetchDerniereCommande();
   }, [user, navigate, location.pathname]);
+
+  // Synchroniser les champs nom et téléphone si l'utilisateur change
+  useEffect(() => {
+    if (user) {
+      setNomComplet(user.nom || "");
+      setTelephone(user.numeroDeTel || "");
+    }
+  }, [user]);
 
   const [operateur, setOperateur] = useState("");
   const [numeroMobile, setNumeroMobile] = useState("");

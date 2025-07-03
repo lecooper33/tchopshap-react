@@ -49,6 +49,16 @@ export default function User() {
   useEffect(() => {
     if (user?.id) {
       setLoading(true);
+      // Récupérer les infos utilisateur (dont l'image) depuis l'API
+      axios.get(`https://tchopshap.onrender.com/utilisateurs/${user.id}`)
+        .then(res => {
+          if (res.data && res.data.image) {
+            setImage(res.data.image);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+      // Récupérer les commandes
       axios.get(`https://tchopshap.onrender.com/commande/${user.id}`)
         .then(res => {
           setCommandes(res.data);
@@ -99,10 +109,13 @@ export default function User() {
       return;
     }
     try {
+      console.log('PUT vers:', `https://tchopshap.onrender.com/utilisateurs/${user.id}`);
+      console.log('Données envoyées:', updatedFields);
       await axios.put(`https://tchopshap.onrender.com/utilisateurs/${user.id}`, updatedFields);
       setMessage({ text: "Informations mises à jour avec succès !", type: "success" });
       setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-    } catch {
+    } catch (err) {
+      console.error('Erreur lors du PUT:', err);
       setMessage({ text: "Erreur lors de la mise à jour", type: "error" });
     }
   };
@@ -178,16 +191,26 @@ export default function User() {
             {/* Profile Form */}
             <Box flex={1}>
               <Box display="flex" alignItems="center" mb={3} gap={2}>
+                <Avatar
+                  src={image || user?.image || undefined}
+                  sx={{
+                    bgcolor: 'primary.main',
+                    width: 90,
+                    height: 90,
+                    fontSize: 36,
+                    fontWeight: 700,
+                    border: '3px solid',
+                    borderColor: 'primary.main',
+                    boxShadow: '0 2px 8px rgba(255,152,0,0.15)',
+                    mr: 2
+                  }}
+                >
+                  {!(image || user?.image) && user?.nom?.charAt(0).toUpperCase()}
+                </Avatar>
                 <Dropzone onDrop={handleImageUpload} accept={{'image/*': []}} multiple={false}>
                   {({ getRootProps, getInputProps }) => (
-                    <Box {...getRootProps()} sx={{ cursor: 'pointer', mr: 2 }}>
+                    <Box {...getRootProps()} sx={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <input {...getInputProps()} />
-                      <Avatar
-                        src={image || user?.image || undefined}
-                        sx={{ bgcolor: 'primary.main', width: 56, height: 56, fontSize: 24, fontWeight: 700 }}
-                      >
-                        {!(image || user?.image) && user?.nom?.charAt(0).toUpperCase()}
-                      </Avatar>
                       <Typography variant="caption" color="primary" display="block" textAlign="center">
                         {uploading ? 'Téléchargement...' : 'Changer la photo'}
                       </Typography>
@@ -219,7 +242,6 @@ export default function User() {
                   name="nom" 
                   value={form.nom} 
                   onChange={handleChange} 
-                  required 
                   fullWidth 
                   variant="outlined" 
                   InputProps={{ 
@@ -235,7 +257,6 @@ export default function User() {
                   name="email" 
                   value={form.email} 
                   onChange={handleChange} 
-                  required 
                   type="email" 
                   fullWidth 
                   variant="outlined" 
@@ -252,7 +273,6 @@ export default function User() {
                   name="numeroDeTel" 
                   value={form.numeroDeTel || ''} 
                   onChange={handleChange} 
-                  required 
                   fullWidth 
                   variant="outlined" 
                   InputProps={{ 
