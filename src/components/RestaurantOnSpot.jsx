@@ -127,19 +127,24 @@ const RestaurantOnSpot = () => {
           {restaurants.map((resto, index) => (
             <Grid  xs={12} key={index}>
               <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRadius: 3,
-                  boxShadow: 3,
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: 6,
-                  },
-                }}
-              >
+  component={RouterLink}
+  to={`/PlatCard/${resto.idRestaurant}`}
+  sx={{
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    borderRadius: 3,
+    boxShadow: 3,
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    textDecoration: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    "&:hover": {
+      transform: "translateY(-5px)",
+      boxShadow: 6,
+    },
+  }}
+>
                 <CardMedia
                   component="img"
                   height="160"

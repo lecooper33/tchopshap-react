@@ -8,21 +8,26 @@ import {
   useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { useNavigate } from 'react-router-dom';
+import SearchDropdown from './SearchDropdown';
 
 function HeroSection() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
 
-  const [address, setAddress] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const handleSearchChange = (e) => {
-    setAddress(e.target.value);
+    setSearchQuery(e.target.value);
+    setShowDropdown(!!e.target.value);
   };
 
   const handleSearchClick = () => {
-    if (address.trim()) {
-      // Ajoutez ici votre logique de recherche
-      console.log(`Recherche d'adresse: ${address}`);
+    if (searchQuery.trim()) {
+      setShowDropdown(false);
+      navigate(`/PlatCard?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -85,21 +90,32 @@ function HeroSection() {
             width: '100%',
             maxWidth: 700,
             gap: { xs: 2, sm: 0 },
+            position: 'relative',
           }}
         >
-          <TextField
-            placeholder="Entrez votre adresse de livraison"
-            variant="outlined"
-            fullWidth
-            value={address}
-            onChange={handleSearchChange}
-            sx={{
-              bgcolor: 'white',
-              borderRadius: { xs: 2, sm: '4px 0 0 4px' },
-              flexGrow: 1,
-            }}
-            aria-label="Adresse de livraison"
-          />
+          <Box sx={{ width: '100%', position: 'relative' }}>
+            <TextField
+              placeholder="Nom de plat ou restaurant"
+              variant="outlined"
+              fullWidth
+              value={searchQuery}
+              onChange={handleSearchChange}
+              sx={{
+                bgcolor: 'white',
+                borderRadius: { xs: 2, sm: '4px 0 0 4px' },
+                flexGrow: 1,
+              }}
+              aria-label="Recherche plat ou restaurant"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearchClick();
+              }}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+              onFocus={() => setShowDropdown(!!searchQuery)}
+            />
+            {showDropdown && (
+              <SearchDropdown query={searchQuery} />
+            )}
+          </Box>
           <Button
             variant="contained"
             onClick={handleSearchClick}

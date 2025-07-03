@@ -83,6 +83,13 @@ const PlatCard = () => {
     if (cat) setSelectedCat(cat);
   }, [location.search]);
 
+  // Ajout : récupération du paramètre de recherche depuis l'URL
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search');
+    if (searchParam) setSearch(searchParam);
+  }, [location.search]);
+
   // Options de catégories (noms récupérés de l'API)
   const categories = [
     "Toutes les catégories",
