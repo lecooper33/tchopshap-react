@@ -59,39 +59,38 @@ export default function Panier() {
 
     setLoading(true);
     try {
-      const commande = {
-        idUtilisateur: parseInt(user.id),
-        idPlat: parseInt(cartItems[0]?.plat?.idPlat),
-        statut: "en préparation",
-        modeDePaiement: "",
-        date_com: new Date().toISOString()
-      };
-
-      console.log("Envoi de la commande:", commande);
-
-      const response = await axios.post(
-        "https://tchopshap.onrender.com/commande",
-        commande
+      // Envoyer une commande pour chaque plat du panier
+      const commandes = await Promise.all(
+        cartItems.map(async (item) => {
+          const commande = {
+            idUtilisateur: parseInt(user.id),
+            idPlat: parseInt(item.plat?.idPlat),
+            statut: "en préparation",
+            modeDePaiement: "",
+            date_com: new Date().toISOString(),
+            montant_total: totalAmount + fraisLivraison // Peut être adapté si besoin
+          };
+          const response = await axios.post(
+            "https://tchopshap.onrender.com/commande",
+            commande
+          );
+          return response.data;
+        })
       );
-      
-      console.log("Réponse du serveur:", response.data);
-
-      if (response.status === 200 || response.status === 201) {
+      // On prend la première commande pour la suite (paiement, etc.)
+      if (commandes.length > 0) {
         const panierData = {
-          commandeId: response.data.idCommande,
+          commandeId: commandes[0].idCommande,
           items: cartItems,
           fraisLivraison,
           sousTotal: totalAmount,
           total: totalAmount + fraisLivraison
         };
-
         clearCart();
         navigate("/Paiement", { state: panierData });
-      } else {
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.error("Erreur détaillée:", error.response?.data || error.message);
+      console.error("Erreur lors de la commande:", error);
     } finally {
       setLoading(false);
     }

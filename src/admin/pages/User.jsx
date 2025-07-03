@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { orange, deepOrange, grey } from '@mui/material/colors';
 import { useNavigate } from "react-router-dom";
+import Dropzone from "react-dropzone";
 
 // Thème personnalisé
 const theme = createTheme({
@@ -31,11 +32,18 @@ const theme = createTheme({
 export default function User() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ nom: user?.nom || "", email: user?.email || "", password: "" });
+  const [form, setForm] = useState({
+    nom: user?.nom || "",
+    email: user?.email || "",
+    numeroDeTel: user?.numeroDeTel || "",
+    password: ""
+  });
   const [commandes, setCommandes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [image, setImage] = useState(user?.image || "");
+  const [uploading, setUploading] = useState(false);
   const isMobile = useMediaQuery('(max-width:600px)');
 
   useEffect(() => {
@@ -57,20 +65,43 @@ export default function User() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleImageUpload = async (acceptedFiles) => {
+    setUploading(true);
+    const file = acceptedFiles[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'tchopshap');
+    formData.append('cloud_name', 'dwhqa7huy');
+    try {
+      const response = await axios.post(
+        'https://api.cloudinary.com/v1_1/dwhqa7huy/image/upload',
+        formData
+      );
+      setImage(response.data.secure_url);
+    } catch (error) {
+      alert('Erreur lors du téléchargement de la photo');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleUpdate = async e => {
     e.preventDefault();
+    // Préparer uniquement les champs modifiés
+    const updatedFields = {};
+    if (form.nom && form.nom !== user?.nom) updatedFields.nom = form.nom;
+    if (form.email && form.email !== user?.email) updatedFields.email = form.email;
+    if (form.numeroDeTel && form.numeroDeTel !== user?.numeroDeTel) updatedFields.numeroDeTel = form.numeroDeTel;
+    if (form.password) updatedFields.password = form.password;
+    if (image && image !== user?.image) updatedFields.image = image;
+    if (Object.keys(updatedFields).length === 0) {
+      setMessage({ text: "Aucune modification détectée.", type: "info" });
+      return;
+    }
     try {
-      await axios.put(`https://tchopshap.onrender.com/utilisateurs/${user.id}`, form);
-      if (form.password) {
-        setMessage({ text: "Changement effectué ! Veuillez valider le code OTP envoyé à votre email pour vérifier votre compte.", type: "success" });
-        setTimeout(() => {
-          setMessage({ text: "", type: "" });
-          navigate("/otp");
-        }, 3000);
-      } else {
-        setMessage({ text: "Informations mises à jour avec succès !", type: "success" });
-        setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-      }
+      await axios.put(`https://tchopshap.onrender.com/utilisateurs/${user.id}`, updatedFields);
+      setMessage({ text: "Informations mises à jour avec succès !", type: "success" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
     } catch {
       setMessage({ text: "Erreur lors de la mise à jour", type: "error" });
     }
@@ -146,26 +177,34 @@ export default function User() {
           <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} gap={4}>
             {/* Profile Form */}
             <Box flex={1}>
-              <Box 
-                display="flex" 
-                alignItems="center" 
-                mb={3}
-                gap={2}
-              >
-                <Avatar 
-                  sx={{ 
-                    bgcolor: 'primary.main', 
-                    width: 56, 
-                    height: 56,
-                    fontSize: 24,
-                    fontWeight: 700
-                  }}
-                >
-                  {user?.nom?.charAt(0).toUpperCase()}
-                </Avatar>
-                <Typography variant="h6" fontWeight={600} color="text.primary">
-                  {user?.nom}
-                </Typography>
+              <Box display="flex" alignItems="center" mb={3} gap={2}>
+                <Dropzone onDrop={handleImageUpload} accept={{'image/*': []}} multiple={false}>
+                  {({ getRootProps, getInputProps }) => (
+                    <Box {...getRootProps()} sx={{ cursor: 'pointer', mr: 2 }}>
+                      <input {...getInputProps()} />
+                      <Avatar
+                        src={image || user?.image || undefined}
+                        sx={{ bgcolor: 'primary.main', width: 56, height: 56, fontSize: 24, fontWeight: 700 }}
+                      >
+                        {!(image || user?.image) && user?.nom?.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Typography variant="caption" color="primary" display="block" textAlign="center">
+                        {uploading ? 'Téléchargement...' : 'Changer la photo'}
+                      </Typography>
+                    </Box>
+                  )}
+                </Dropzone>
+                <Box>
+                  <Typography variant="h6" fontWeight={600} color="text.primary">
+                    {user?.nom}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {user?.email}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {user?.numeroDeTel}
+                  </Typography>
+                </Box>
               </Box>
 
               <Box 
@@ -198,6 +237,22 @@ export default function User() {
                   onChange={handleChange} 
                   required 
                   type="email" 
+                  fullWidth 
+                  variant="outlined" 
+                  InputProps={{ 
+                    sx: { 
+                      borderRadius: 2,
+                      background: '#fff',
+                    } 
+                  }} 
+                />
+
+                <TextField 
+                  label="Numéro de téléphone" 
+                  name="numeroDeTel" 
+                  value={form.numeroDeTel || ''} 
+                  onChange={handleChange} 
+                  required 
                   fullWidth 
                   variant="outlined" 
                   InputProps={{ 
@@ -313,49 +368,62 @@ export default function User() {
                   </Typography>
                 </Box>
               ) : (
-                <List sx={{ maxHeight: 400, overflow: 'auto', pr: 1 }}>
-                  {commandes.map(cmd => (
-                    <ListItem 
-                      key={cmd.idCommande} 
-                      sx={{ 
-                        mb: 2,
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: '#fff',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                          transform: 'translateY(-2px)'
-                        }
-                      }}
-                    >
-                      <ListItemText
-                        primary={
-                          <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Typography fontWeight={600} color="text.primary">
-                              Commande #{cmd.idCommande}
+                <>
+                  <List sx={{ maxHeight: 300, overflow: 'auto', pr: 1 }}>
+                    {commandes.slice(0, 3).map(cmd => (
+                      <ListItem 
+                        key={cmd.idCommande} 
+                        sx={{ 
+                          mb: 2,
+                          p: 2,
+                          borderRadius: 2,
+                          bgcolor: '#fff',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
+                        <ListItemText
+                          primary={
+                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                              <Typography fontWeight={600} color="text.primary">
+                                Commande #{cmd.idCommande}
+                              </Typography>
+                              <Chip 
+                                label={cmd.statut} 
+                                size="small"
+                                sx={{ 
+                                  fontWeight: 600,
+                                  bgcolor: cmd.statut === 'livrée' ? '#e8f5e9' : '#fff3e0',
+                                  color: cmd.statut === 'livrée' ? '#2e7d32' : 'primary.dark'
+                                }}
+                              />
+                            </Box>
+                          }
+                          secondary={
+                            <Typography variant="body2" color="text.secondary" mt={1}>
+                              {formatDate(cmd.dateCommande)}
                             </Typography>
-                            <Chip 
-                              label={cmd.statut} 
-                              size="small"
-                              sx={{ 
-                                fontWeight: 600,
-                                bgcolor: cmd.statut === 'livrée' ? '#e8f5e9' : '#fff3e0',
-                                color: cmd.statut === 'livrée' ? '#2e7d32' : 'primary.dark'
-                              }}
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <Typography variant="body2" color="text.secondary" mt={1}>
-                            {formatDate(cmd.dateCommande)}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                  ))}
-                </List>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                  <Box textAlign="right" mt={1}>
+                    <Button 
+                      variant="outlined" 
+                      color="primary" 
+                      size="small" 
+                      sx={{ fontWeight: 600, borderRadius: 2 }}
+                      onClick={() => navigate('/MesCommandes')}
+                    >
+                      Voir tout l'historique
+                    </Button>
+                  </Box>
+                </>
               )}
             </Box>
           </Box>

@@ -16,6 +16,7 @@ import Otp from "./pages/Otp.jsx"
 import PlatCard from "./components/PlatCard.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import EditProfil from "./pages/ProfilUpload.jsx";
+import PaymentError from "./pages/PaymentError.jsx";
 // Pages administrateur
 import Admin from "./admin/pages/Admin.jsx";
 import Dashboard from "./admin/pages/Dashboard.jsx";
@@ -59,6 +60,7 @@ const AppContent = () => {
         <Route path="/PlatCard/:idRestaurant?" element={<PlatCard />} />
         <Route path="/paiement" element={<Paiement />} />
         <Route path="/confirmation" element={<Confirmation />} />
+        <Route path="/payment-error" element={<PaymentError />} />
         <Route path="/otp" element={<Otp />} />
         <Route path="/editprofil" element={<EditProfil/>}/>
         <Route path="/user" element={<User />} />
