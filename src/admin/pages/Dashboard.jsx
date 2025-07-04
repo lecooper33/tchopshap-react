@@ -128,28 +128,42 @@ export default function Dashboard() {
         axios.get("https://tchopshap.onrender.com/utilisateurs")
       ]);
 
-      // Filtrer les restaurants de l'utilisateur connecté
-      const userRestaurants = resRestaurant.data.filter(resto => resto.idUtilisateur === userId);
-      
-      // Filtrer les plats des restaurants de l'utilisateur
-      const restaurantIds = userRestaurants.map(resto => resto.idRestaurant);
-      const userPlats = resPlat.data.filter(plat => restaurantIds.includes(plat.idRestaurant));
-      
-      // Filtrer les commandes des plats des restaurants de l'utilisateur
-      const platIds = userPlats.map(plat => plat.idPlat);
-      const userCommandes = (resCommande.data.data || []).filter(cmd => platIds.includes(cmd.idPlat));
+      // Ajout de logs pour voir ce que le backend renvoie
+      console.log('Réponse commandes brute:', resCommande.data);
+      console.log('Réponse restaurants brute:', resRestaurant.data);
+      console.log('Réponse plats brute:', resPlat.data);
+      console.log('Réponse utilisateurs brute:', resUsers.data);
 
-      const newStats = {
-        restaurant: userRestaurants,
-        plat: userPlats,
-        commande: userCommandes,
-        users: resUsers.data
-      };
+      // Récupérer les données et sécuriser le typage
+      const allRestaurants = Array.isArray(resRestaurant.data.data) ? resRestaurant.data.data : [];
+      const allPlats = Array.isArray(resPlat.data.data) ? resPlat.data.data : [];
+      const allCommandes = Array.isArray(resCommande.data.data) ? resCommande.data.data : [];
+      const allUsers = Array.isArray(resUsers.data.data) ? resUsers.data.data : [];
 
-      // Vérifier les nouvelles commandes
-      const currentCommandeIds = new Set(newStats.commande.map((cmd) => cmd.idCommande));
+      // 1. Filtrer les restaurants de l'utilisateur
+      const userRestaurants = allRestaurants.filter(
+        resto => parseInt(resto.idUtilisateur) === userId
+      );
+
+      // 2. Extraire les ID des restaurants
+      const restaurantIds = userRestaurants.map(resto =>
+        parseInt(resto.idRestaurant)
+      );
+
+      // 3. Filtrer les plats liés aux restaurants de l'utilisateur
+      const userPlats = allPlats.filter(plat =>
+        restaurantIds.includes(parseInt(plat.idRestaurant))
+      );
+
+      // 4. Filtrer les commandes liées à ces restaurants
+      const userCommandes = allCommandes.filter(cmd =>
+        restaurantIds.includes(parseInt(cmd.idRestaurant))
+      );
+
+      // 5. Vérifier les nouvelles commandes
+      const currentCommandeIds = new Set(userCommandes.map(cmd => cmd.idCommande));
       const hasNewCommandes = [...currentCommandeIds].some(
-        (id) => !previousCommandeIds.current.has(id)
+        id => !previousCommandeIds.current.has(id)
       );
 
       if (hasNewCommandes) {
@@ -159,44 +173,48 @@ export default function Dashboard() {
 
       previousCommandeIds.current = currentCommandeIds;
 
-      // Préparer les données pour les graphiques des derniers jours
+      // 6. Préparer les données pour les graphiques
       const lastDays = Array.from({ length: periodFilter }, (_, i) => {
         const date = subDays(new Date(), i);
         const dayStr = format(date, 'EEEE', { locale: fr });
-        const dayCommands = newStats.commande.filter(cmd => {
+        const dayCommands = userCommandes.filter(cmd => {
           if (!cmd.date_com) return false;
           try {
             const commandDate = parseISO(cmd.date_com);
-            return isValid(commandDate) && 
-                   startOfDay(commandDate).getTime() === startOfDay(date).getTime();
+            return isValid(commandDate) &&
+              startOfDay(commandDate).getTime() === startOfDay(date).getTime();
           } catch (error) {
             console.error("Date invalide:", cmd.date_com);
             return false;
           }
         });
-        
         return {
           name: dayStr,
           commandes: dayCommands.length,
-          montant: dayCommands.reduce((sum, cmd) => sum + (cmd.montant || 0), 0)
+          montant: dayCommands.reduce((sum, cmd) => sum + parseFloat(cmd.total || 0), 0)
         };
       }).reverse();
 
       setDailyStats(lastDays);
 
-      // Préparer les données des commandes avec les informations utilisateur
-      const commandesWithUserInfo = newStats.commande.map(cmd => {
-        const user = newStats.users.find(u => u.idUtilisateur === cmd.idUtilisateur);
-        const plat = newStats.plat.find(p => p.idPlat === cmd.idPlat);
+      // 7. Ajouter les infos utilisateurs dans les commandes
+      const commandesWithUserInfo = userCommandes.map(cmd => {
+        const user = allUsers.find(u => u.idUtilisateur === cmd.idUtilisateur);
         return {
           ...cmd,
-          userName: user ? `${user.nom} ${user.prenom || ''}` : 'Utilisateur inconnu',
-          platNom: plat ? plat.nom : 'Plat inconnu',
+          userName: user ? `${user.nom} ${user.prenom || ''}` : (cmd.nomUtilisateur || 'Utilisateur inconnu'),
+          platNom: cmd.nomPlat || 'Plat inconnu'
         };
       }).sort((a, b) => new Date(b.date_com) - new Date(a.date_com));
 
+      // 8. Mettre à jour les états
       setUserCommands(commandesWithUserInfo);
-      setStats(newStats);
+      setStats({
+        restaurant: userRestaurants,
+        plat: userPlats,
+        commande: userCommandes,
+        users: allUsers
+      });
       setLoading(false);
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
@@ -277,8 +295,9 @@ export default function Dashboard() {
                     Évolution des commandes
                   </Typography>
                   <FormControl sx={{ minWidth: 200 }}>
-                    <InputLabel>Période</InputLabel>
+                    <InputLabel id="periode-label">Période</InputLabel>
                     <Select
+                      labelId="periode-label"
                       value={periodFilter}
                       label="Période"
                       onChange={(e) => setPeriodFilter(e.target.value)}
@@ -335,7 +354,7 @@ export default function Dashboard() {
                       <TableRow>
                         <TableCell>ID Commande</TableCell>
                         <TableCell>Client</TableCell>
-                        <TableCell>Plat</TableCell>
+                        <TableCell>Restaurant</TableCell>
                         <TableCell>Date</TableCell>
                         <TableCell>Montant</TableCell>
                         <TableCell>Statut</TableCell>
@@ -343,38 +362,41 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {userCommands.slice(0, 10).map((cmd) => (
-                        <TableRow key={cmd.idCommande}>
-                          <TableCell>#{cmd.idCommande}</TableCell>
-                          <TableCell>{cmd.userName}</TableCell>
-                          <TableCell>{cmd.platNom}</TableCell>
-                          <TableCell>
-                            {cmd.date_com ? format(parseISO(cmd.date_com), 'Pp', { locale: fr }) : 'Date non disponible'}
-                          </TableCell>
-                          <TableCell>{cmd.total ? `${cmd.total.toLocaleString()} FCFA` : '-'}</TableCell>
-                          <TableCell>
-                            <Box
-                              sx={{
-                                backgroundColor: 
-                                  cmd.statut === 'en préparation' ? '#fff3cd' :
-                                  cmd.statut === 'livré' ? '#d4edda' :
-                                  '#f8d7da',
-                                color: 
-                                  cmd.statut === 'en préparation' ? '#856404' :
-                                  cmd.statut === 'livré' ? '#155724' :
-                                  '#721c24',
-                                px: 2,
-                                py: 0.5,
-                                borderRadius: 1,
-                                display: 'inline-block'
-                              }}
-                            >
-                              {cmd.statut}
-                            </Box>
-                          </TableCell>
-                          <TableCell>{cmd.modeDePaiement}</TableCell>
-                        </TableRow>
-                      ))}
+                      {userCommands
+                        .filter(cmd => stats.restaurant.some(resto => parseInt(resto.idRestaurant) === parseInt(cmd.idRestaurant)))
+                        .slice(0, 10)
+                        .map((cmd) => (
+                          <TableRow key={cmd.idCommande}>
+                            <TableCell>#{cmd.idCommande}</TableCell>
+                            <TableCell>{cmd.nomUtilisateur || cmd.userName}</TableCell>
+                            <TableCell>{cmd.nomRestaurant}</TableCell>
+                            <TableCell>
+                              {cmd.date_com ? format(parseISO(cmd.date_com), 'Pp', { locale: fr }) : 'Date non disponible'}
+                            </TableCell>
+                            <TableCell>{cmd.total ? `${parseFloat(cmd.total).toLocaleString()} FCFA` : '-'}</TableCell>
+                            <TableCell>
+                              <Box
+                                sx={{
+                                  backgroundColor: 
+                                    cmd.statut === 'en préparation' ? '#fff3cd' :
+                                    cmd.statut === 'livré' ? '#d4edda' :
+                                    '#f8d7da',
+                                  color: 
+                                    cmd.statut === 'en préparation' ? '#856404' :
+                                    cmd.statut === 'livré' ? '#155724' :
+                                    '#721c24',
+                                  px: 2,
+                                  py: 0.5,
+                                  borderRadius: 1,
+                                  display: 'inline-block'
+                                }}
+                              >
+                                {cmd.statut}
+                              </Box>
+                            </TableCell>
+                            <TableCell>{cmd.modeDePaiement}</TableCell>
+                          </TableRow>
+                        ))}
                     </TableBody>
                   </Table>
                 </TableContainer>

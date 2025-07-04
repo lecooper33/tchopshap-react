@@ -24,13 +24,15 @@ function PlatsForm() {
 
   useEffect(() => {
     if (!userId) return;
-
     axios.get("https://tchopshap.onrender.com/restaurant")
       .then(res => {
-        const userRestaurants = res.data.filter(r => r.idUtilisateur === userId);
+        // Correction structure : res.data.data
+        const userRestaurants = Array.isArray(res.data.data)
+          ? res.data.data.filter(r => r.idUtilisateur === userId)
+          : [];
         setRestaurants(userRestaurants);
       })
-      .catch(err => console.error(" Erreur de récupération des restaurants :", err));
+      .catch(err => console.error("Erreur de récupération des restaurants :", err));
   }, [userId]);
 
   const handleOpen = () => setOpen(true);
@@ -74,26 +76,23 @@ function PlatsForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!restaurantId) {
       alert("Veuillez sélectionner un restaurant.");
       return;
     }
-
     const platData = {
-      idRestaurant: restaurantId,
+      idRestaurant: parseInt(restaurantId),
       nom: formData.nom,
-      prix: parseFloat(formData.prix),
+      prix: formData.prix,
       details: formData.details,
       image: formData.image
     };
-
     try {
       const response = await axios.post("https://tchopshap.onrender.com/plat", platData);
-      console.log("✅ Plat ajouté avec succès:", response.data);
+      console.log(" Plat ajouté avec succès:", response.data);
       handleClose();
     } catch (error) {
-      console.error("❌ Erreur lors de l'ajout du plat:", error);
+      console.error(" Erreur lors de l'ajout du plat:", error);
     }
   };
 
@@ -110,7 +109,7 @@ function PlatsForm() {
 
             {/* idRestaurant */}
             <FormControl fullWidth margin="normal" required>
-              <InputLabel id="restaurant-label">idRestaurant</InputLabel>
+              <InputLabel id="restaurant-label">Restaurant</InputLabel>
            <Select
                label="restaurant-label"
                value={restaurantId}

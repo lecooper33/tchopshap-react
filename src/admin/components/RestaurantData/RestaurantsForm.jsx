@@ -23,7 +23,7 @@ function RestaurantForm() {
     const fetchCategories = async () => {
       try {
         const response = await axios.get("https://tchopshap.onrender.com/categorie");
-        setCategories(response.data);
+        setCategories(response.data.data);
       } catch (error) {
         console.error("Erreur lors du chargement des catégories:", error);
       }

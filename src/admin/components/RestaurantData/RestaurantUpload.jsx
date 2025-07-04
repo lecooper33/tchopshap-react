@@ -24,8 +24,9 @@ function RestaurantUpload() {
   useEffect(() => {
     axios.get("https://tchopshap.onrender.com/restaurant")
       .then(res => {
-        const allRestaurants = res.data;
-        const userRestaurants = allRestaurants.filter(r => r.idUtilisateur === userId); // ✅ Clé corrigée
+        // Nouvelle structure : res.data.data est le tableau des restaurants
+        const allRestaurants = Array.isArray(res.data.data) ? res.data.data : [];
+        const userRestaurants = allRestaurants.filter(r => r.idUtilisateur === userId);
         setRestaurants(userRestaurants);
       })
       .catch(err => console.error("❌ Erreur de récupération des restaurants :", err));

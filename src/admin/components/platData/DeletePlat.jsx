@@ -21,30 +21,34 @@ function DeletePlat() {
   const userId = parseInt(localStorage.getItem("userId")); 
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [platsRes, restosRes] = await Promise.all([
-        axios.get("https://tchopshap.onrender.com/plat"),
-        axios.get("https://tchopshap.onrender.com/restaurant"),
-      ]);
-
-      const userRestaurant = restosRes.data.find(r => r.idUtilisateur === userId);
-
-      if (!userRestaurant) {
-        console.warn("Aucun restaurant trouvé pour cet utilisateur.");
-        setPlats([]);
-        return;
+    const fetchData = async () => {
+      try {
+        const [platsRes, restosRes] = await Promise.all([
+          axios.get("https://tchopshap.onrender.com/plat"),
+          axios.get("https://tchopshap.onrender.com/restaurant"),
+        ]);
+        // Correction structure : platsRes.data.data et restosRes.data.data
+        const userRestaurants = Array.isArray(restosRes.data.data)
+          ? restosRes.data.data.filter(r => r.idUtilisateur === userId)
+          : [];
+        if (userRestaurants.length === 0) {
+          console.warn("Aucun restaurant trouvé pour cet utilisateur.");
+          setPlats([]);
+          return;
+        }
+        // On récupère tous les plats de tous les restaurants de l'utilisateur
+        const userRestaurantIds = userRestaurants.map(r => r.idRestaurant);
+        const platsDuRestaurant = Array.isArray(platsRes.data.data)
+          ? platsRes.data.data.filter(p => userRestaurantIds.includes(p.idRestaurant))
+          : [];
+        setPlats(platsDuRestaurant);
+      } catch (error) {
+        console.error("Erreur de chargement :", error);
       }
+    };
 
-      const platsDuRestaurant = platsRes.data.filter(p => p.idRestaurant === userRestaurant.idRestaurant);
-      setPlats(platsDuRestaurant);
-    } catch (error) {
-      console.error("Erreur de chargement :", error);
-    }
-  };
-
-  fetchData();
-}, [userId]);
+    fetchData();
+  }, [userId]);
 
  
   const handleDelete = async (id) => {

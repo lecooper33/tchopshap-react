@@ -202,7 +202,7 @@ const AdminLayout = ({ children }) => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get(`https://tchopshap.onrender.com/notifications/${localStorage.getItem("userId")}`);
+        const response = await axios.get(``);
         const newNotifs = response.data.filter(notif => !notif.read);
         if (newNotifs.length > unreadCount) {
           toast.custom((t) => (
