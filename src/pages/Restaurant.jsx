@@ -35,8 +35,8 @@ const Resto = () => {
     const fetchCategories = async () => {
       try {
         const res = await axios.get("https://tchopshap.onrender.com/categorie");
-        setCatData(res.data);
-        setCategories(["Tous", ...res.data.map((c) => c["categorie"])]);
+        setCatData(res.data.data); // Correction ici : accès à res.data.data
+        setCategories(["Tous", ...res.data.data.map((c) => c.categorie)]); // Correction ici
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -50,7 +50,7 @@ const Resto = () => {
       setLoading(true);
       try {
         const res = await axios.get("https://tchopshap.onrender.com/restaurant");
-        setRestaurants(res.data);
+        setRestaurants(res.data.data || []); // Correction ici
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       } finally {
@@ -71,7 +71,7 @@ const Resto = () => {
 
   const getCatNom = (id) => {
     const cat = catData.find((c) => c.idCategorie === id);
-    return cat ? cat["categorie"] : "Inconnue";
+    return cat ? cat.categorie : "Inconnue";
   };
 
   const filtered = restaurants

@@ -137,7 +137,7 @@ export default function Dashboard() {
       
       // Filtrer les commandes des plats des restaurants de l'utilisateur
       const platIds = userPlats.map(plat => plat.idPlat);
-      const userCommandes = resCommande.data.filter(cmd => platIds.includes(cmd.idPlat));
+      const userCommandes = (resCommande.data.data || []).filter(cmd => platIds.includes(cmd.idPlat));
 
       const newStats = {
         restaurant: userRestaurants,
@@ -351,7 +351,7 @@ export default function Dashboard() {
                           <TableCell>
                             {cmd.date_com ? format(parseISO(cmd.date_com), 'Pp', { locale: fr }) : 'Date non disponible'}
                           </TableCell>
-                          <TableCell>{cmd.montant ? `${cmd.montant.toLocaleString()} FCFA` : '-'}</TableCell>
+                          <TableCell>{cmd.total ? `${cmd.total.toLocaleString()} FCFA` : '-'}</TableCell>
                           <TableCell>
                             <Box
                               sx={{

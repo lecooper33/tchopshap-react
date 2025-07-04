@@ -17,8 +17,8 @@ const MesCommandes = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`https://tchopshap.onrender.com/commande/${user.id}`);
-      setCommandes(res.data);
+      const res = await axios.get(`https://tchopshap.onrender.com/utilisateurs/${user.id}/commande`);
+      setCommandes(res.data.data || []);
     } catch (e) {
       setError("Erreur lors du chargement des commandes.");
     }
@@ -61,7 +61,7 @@ const MesCommandes = () => {
                         <Chip label={cmd.statut} sx={{ fontWeight: 600, bgcolor: cmd.statut === 'livrée' ? '#e8f5e9' : '#fff3e0', color: cmd.statut === 'livrée' ? '#2e7d32' : 'primary.dark' }} />
                       </Box>
                     }
-                    secondary={<Typography variant="body2" color="text.secondary">{formatDate(cmd.dateCommande)}</Typography>}
+                    secondary={<Typography variant="body2" color="text.secondary">{formatDate(cmd.date_com)}</Typography>}
                   />
                 </ListItem>
               ))}

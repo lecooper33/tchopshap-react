@@ -6,7 +6,6 @@ import Download from "../components/Download.jsx";
 import HowItWorks from "../components/HowItWorks.jsx";
 import Footer from "../components/Footer.jsx";
 
-import categories from "../components/category.js";
 import restaurants from "../components/restaurantsData";
 import "../App.css";
 
@@ -16,7 +15,7 @@ export default function Home() {
     <section className="home-page">
       <Header />
       <HeroSection />
-      <CategoryList categories={categories} />
+      <CategoryList />
       <RestaurantOnSpot restaurants={restaurants} />
       <HowItWorks />
       <Download />

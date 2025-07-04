@@ -19,7 +19,6 @@ export default function Facture() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [commandeId, setCommandeId] = useState(null);
   const [modePaiement, setModePaiement] = useState("");
   
   // États pour les informations de livraison
@@ -31,6 +30,8 @@ export default function Facture() {
   // Récupération des données du state
   const state = location.state || {};
   const {
+    commandes = [], // tableau [{idCommande, idRestaurant, montantTotal}]
+    items = [],
     total = 0,
     sousTotal = 0,
     fraisLivraison = 0
@@ -46,7 +47,7 @@ export default function Facture() {
     const fetchDerniereCommande = async () => {
       try {
         const response = await axios.get("https://tchopshap.onrender.com/commande");
-        const commandes = response.data;
+        const commandes = response.data.data || [];
         
         // Filtrer les commandes de l'utilisateur et prendre la plus récente
         const commandesUtilisateur = commandes.filter(
@@ -60,7 +61,7 @@ export default function Facture() {
           )[0];
 
           console.log("Dernière commande trouvée:", derniereCommande);
-          setCommandeId(derniereCommande.idCommande);
+          // setCommandeId(derniereCommande.idCommande);
         } else {
           console.log("Aucune commande trouvée pour l'utilisateur");
           navigate("/Cart");
@@ -97,78 +98,70 @@ export default function Facture() {
       alert("Veuillez remplir toutes les informations de livraison obligatoires");
       return;
     }
-
     // Validation du format du numéro de téléphone
     const numeroRegex = /^0[1-9][0-9]{7}$/;
     if (!numeroRegex.test(telephone)) {
       alert("Le numéro de téléphone doit être au format 0XXXXXXXX (9 chiffres)");
       return;
     }
-
-    if (!commandeId) {
-      alert("ID de commande manquant");
-      return; 
+    if (!commandes.length) {
+      alert("Aucune commande à traiter");
+      return;
     }
-
     setLoading(true);
-
     try {
-      // Traiter le paiement selon le mode choisi
-      if (modePaiement === "Mobile Money") {
-        const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/rest-transaction", {
-          amount: total,
-          customer_account_number: telephone,
-          product: "CommandePlat",
-          free_info: nomComplet
-        });
-
-        if (!paiementResponse.data.success || paiementResponse.data.data.status !== "SUCCESS") {
-          throw new Error(paiementResponse.data.message || "Échec du paiement mobile money");
+      for (const cmd of commandes) {
+        let paiementOk = true;
+        if (modePaiement === "Mobile Money") {
+          const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/rest-transaction", {
+            amount: cmd.montantTotal || total,
+            customer_account_number: telephone,
+            product: "CommandePlat",
+            free_info: nomComplet
+          });
+          if (!paiementResponse.data.success || paiementResponse.data.data.status !== "SUCCESS") {
+            paiementOk = false;
+            break;
+          }
+        } else if (modePaiement === "Carte Bancaire") {
+          const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/payment/generate-link", {
+            amount: cmd.montantTotal || total,
+            customer_account_number: telephone,
+            service: "VISA_MASTERCARD",
+            agent: "WEB",
+            product: "CommandePlat",
+            free_info: nomComplet,
+            owner_charge: "CUSTOMER",
+            operator_owner_charge: "CUSTOMER"
+          });
+          if (paiementResponse.data.success && paiementResponse.data.paymentLink) {
+            await axios.put(`https://tchopshap.onrender.com/commande/${cmd.idCommande}`, {
+              modeDePaiement: modePaiement,
+              statut: "en préparation",
+              date_com: new Date().toISOString(),
+              montant_total: cmd.montantTotal || total
+            });
+            window.location.href = paiementResponse.data.paymentLink;
+            return;
+          } else {
+            paiementOk = false;
+            break;
+          }
         }
-        // Mettre à jour la commande avec le mode de paiement choisi après succès
-        await axios.put(`https://tchopshap.onrender.com/commande/${commandeId}`, {
-          modeDePaiement: modePaiement,
-          statut: "en préparation",
-          date_com: new Date().toISOString(),
-          montant_total: total
-        });
-        navigate("/Confirmation");
-      } else if (modePaiement === "Carte Bancaire") {
-        const paiementResponse = await axios.post("https://tchopshap.onrender.com/api/payment/generate-link", {
-          amount: total,
-          customer_account_number: telephone,
-          service: "VISA_MASTERCARD",
-          agent: "WEB",
-          product: "CommandePlat",
-          free_info: nomComplet,
-          owner_charge: "CUSTOMER",
-          operator_owner_charge: "CUSTOMER"
-        });
-
-        if (paiementResponse.data.success && paiementResponse.data.paymentLink) {
-          // Mettre à jour la commande avec le mode de paiement choisi avant la redirection
-          await axios.put(`https://tchopshap.onrender.com/commande/${commandeId}`, {
+        // Mise à jour de la commande après paiement (ou pour espèces)
+        if (paiementOk || modePaiement === "Espèce") {
+          await axios.put(`https://tchopshap.onrender.com/commande/${cmd.idCommande}`, {
             modeDePaiement: modePaiement,
             statut: "en préparation",
             date_com: new Date().toISOString(),
-            montant_total: total
+            montant_total: cmd.montantTotal || total
           });
-          window.location.href = paiementResponse.data.paymentLink;
         } else {
-          throw new Error(paiementResponse.data.message || "Échec de la génération du lien de paiement");
+          throw new Error("Paiement échoué pour une commande");
         }
-      } else if (modePaiement === "Espèce") {
-        // Mettre à jour la commande avec le mode de paiement choisi
-        await axios.put(`https://tchopshap.onrender.com/commande/${commandeId}`, {
-          modeDePaiement: modePaiement,
-          statut: "en préparation",
-          date_com: new Date().toISOString(),
-          montant_total: total
-        });
-        navigate("/Confirmation");
       }
+      navigate("/Confirmation");
     } catch (error) {
-      // Rediriger vers la page d'erreur de paiement en cas d'échec
       navigate("/payment-error");
     } finally {
       setLoading(false);

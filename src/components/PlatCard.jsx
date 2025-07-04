@@ -46,7 +46,7 @@ const PlatCard = () => {
   useEffect(() => {
     axios
       .get("https://tchopshap.onrender.com/plat")
-      .then((res) => setPlats(res.data))
+      .then((res) => setPlats(res.data.data || [])) // Correction ici
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -57,9 +57,9 @@ const PlatCard = () => {
     axios
       .get("https://tchopshap.onrender.com/restaurant")
       .then((res) => {
-        setRestaurants(res.data);
+        setRestaurants(res.data.data || []); // Correction ici
         if (idRestaurant) {
-          const r = res.data.find(
+          const r = (res.data.data || []).find(
             (r) => r.idRestaurant.toString() === idRestaurant
           );
           if (r) {
@@ -72,7 +72,7 @@ const PlatCard = () => {
     // Catégories
     axios
       .get("https://tchopshap.onrender.com/categorie")
-      .then((res) => setCategoriesData(res.data))
+      .then((res) => setCategoriesData(res.data.data || [])) // Correction ici
       .catch(console.error);
   }, [idRestaurant]);
 

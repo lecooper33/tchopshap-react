@@ -52,16 +52,19 @@ export default function User() {
       // Récupérer les infos utilisateur (dont l'image) depuis l'API
       axios.get(`https://tchopshap.onrender.com/utilisateurs/${user.id}`)
         .then(res => {
-          if (res.data && res.data.image) {
-            setImage(res.data.image);
+          if (res.data && res.data.data) {
+            const userData = Array.isArray(res.data.data) ? res.data.data[0] : res.data.data;
+            if (userData && userData.image) {
+              setImage(userData.image);
+            }
           }
         })
         .catch(() => {})
         .finally(() => setLoading(false));
       // Récupérer les commandes
-      axios.get(`https://tchopshap.onrender.com/commande/${user.id}`)
+      axios.get(`https://tchopshap.onrender.com/utilisateurs/${user.id}/commande`)
         .then(res => {
-          setCommandes(res.data);
+          setCommandes(res.data.data || []);
           setLoading(false);
         })
         .catch(() => {
@@ -425,7 +428,7 @@ export default function User() {
                           }
                           secondary={
                             <Typography variant="body2" color="text.secondary" mt={1}>
-                              {formatDate(cmd.dateCommande)}
+                              {formatDate(cmd.date_com)}
                             </Typography>
                           }
                         />

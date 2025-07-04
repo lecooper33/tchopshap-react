@@ -28,8 +28,8 @@ export default function PaymentError() {
     : {};
 
   React.useEffect(() => {
-    if (commandeState && commandeState.commandeId) {
-      axios.put(`https://tchopshap.onrender.com/commande/${commandeState.commandeId}`, {
+    if (commandeState && commandeState.idCommande) {
+      axios.put(`https://tchopshap.onrender.com/commande/${commandeState.idCommande}/statut`, {
         statut: "annulée"
       }).catch(() => {}); // On ignore l'erreur pour ne pas bloquer l'affichage
     }
@@ -72,9 +72,9 @@ export default function PaymentError() {
                 sx={{ backgroundColor: "#F97316", width: "100%" }}
                 onClick={async (e) => {
                   e.preventDefault();
-                  if (commandeState && commandeState.commandeId) {
+                  if (commandeState && commandeState.idCommande) {
                     try {
-                      await axios.put(`https://tchopshap.onrender.com/commande/${commandeState.commandeId}`, {
+                      await axios.put(`https://tchopshap.onrender.com/commande/${commandeState.idCommande}/statut`, {
                         statut: "annulée"
                       });
                     } catch {}
@@ -91,9 +91,9 @@ export default function PaymentError() {
                 color="black"
                 sx={{ backgroundColor: "#FFFFFF", width: "100%" }}
                 onClick={async () => {
-                  if (commandeState && commandeState.commandeId) {
+                  if (commandeState && commandeState.idCommande) {
                     try {
-                      await axios.put(`https://tchopshap.onrender.com/commande/${commandeState.commandeId}`, {
+                      await axios.put(`https://tchopshap.onrender.com/commande/${commandeState.idCommande}/statut`, {
                         statut: "annulée"
                       });
                     } catch {}

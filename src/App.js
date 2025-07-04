@@ -17,6 +17,7 @@ import PlatCard from "./components/PlatCard.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import EditProfil from "./pages/ProfilUpload.jsx";
 import PaymentError from "./pages/PaymentError.jsx";
+import MesCommandes from "./pages/MesCommandes.jsx";  
 // Pages administrateur
 import Admin from "./admin/pages/Admin.jsx";
 import Dashboard from "./admin/pages/Dashboard.jsx";
@@ -64,6 +65,7 @@ const AppContent = () => {
         <Route path="/otp" element={<Otp />} />
         <Route path="/editprofil" element={<EditProfil/>}/>
         <Route path="/user" element={<User />} />
+        <Route path="/MesCommandes" element={<MesCommandes />} />
         
         {/* Routes administrateur */}
         <Route path="/admin" element={<PrivateRoutes><Admin /></PrivateRoutes>} />

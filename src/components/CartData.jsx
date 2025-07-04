@@ -59,28 +59,24 @@ export default function Panier() {
 
     setLoading(true);
     try {
-      // Envoyer une commande pour chaque plat du panier
-      const commandes = await Promise.all(
-        cartItems.map(async (item) => {
-          const commande = {
-            idUtilisateur: parseInt(user.id),
-            idPlat: parseInt(item.plat?.idPlat),
-            statut: "en préparation",
-            modeDePaiement: "",
-            date_com: new Date().toISOString(),
-            montant_total: totalAmount + fraisLivraison // Peut être adapté si besoin
-          };
-          const response = await axios.post(
-            "https://tchopshap.onrender.com/commande",
-            commande
-          );
-          return response.data;
-        })
+      // Préparer les produits pour la nouvelle API
+      const produits = cartItems.map((item) => ({
+        idPlat: parseInt(item.plat?.idPlat),
+        quantite: item.quantite
+      }));
+      const body = {
+        idUtilisateur: parseInt(user.id),
+        modeDePaiement: "en attente", // valeur par défaut, sera mise à jour lors du paiement
+        produits
+      };
+      const response = await axios.post(
+        "https://tchopshap.onrender.com/commande",
+        body
       );
-      // On prend la première commande pour la suite (paiement, etc.)
-      if (commandes.length > 0) {
+      // On prend les commandes créées (peut être un tableau)
+      if (response.data && response.data.commandes && response.data.commandes.length > 0) {
         const panierData = {
-          commandeId: commandes[0].idCommande,
+          commandes: response.data.commandes, // tableau d'objets {idCommande, idRestaurant, montantTotal}
           items: cartItems,
           fraisLivraison,
           sousTotal: totalAmount,

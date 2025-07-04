@@ -31,12 +31,12 @@ export default function SearchResults() {
     ])
       .then(([platsRes, restosRes]) => {
         setPlats(
-          platsRes.data.filter((p) =>
+          (platsRes.data.data || []).filter((p) =>
             p.nom.toLowerCase().includes(q.toLowerCase())
           )
         );
         setRestaurants(
-          restosRes.data.filter((r) =>
+          (restosRes.data.data || []).filter((r) =>
             r.nom.toLowerCase().includes(q.toLowerCase())
           )
         );

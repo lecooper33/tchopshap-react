@@ -29,21 +29,15 @@ export default function Confirm() {
   useEffect(() => {
     const fetchCommandeInfo = async () => {
       try {
-        // Récupération de la dernière commande de l'utilisateur
-        const commandeResponse = await axios.get('https://tchopshap.onrender.com/commande');
-        const commandes = commandeResponse.data;
-        const userCommande = commandes
-          .filter(cmd => cmd.idUtilisateur === user.id)
-          .sort((a, b) => new Date(b.date_com) - new Date(a.date_com))[0];
+        // Récupération des commandes de l'utilisateur
+        const commandeResponse = await axios.get(`https://tchopshap.onrender.com/utilisateurs/${user.id}/commande`);
+        const commandes = commandeResponse.data.data || [];
+        const userCommande = commandes.sort((a, b) => new Date(b.date_com) - new Date(a.date_com))[0];
 
         if (userCommande) {
           setCommandeInfo(userCommande);
-          
-          // Récupération des informations de l'utilisateur
-          const userResponse = await axios.get(`https://tchopshap.onrender.com/utilisateurs/${userCommande.idUtilisateur}`);
-          setUserName(userResponse.data.nom);
+          setUserName(user.nom || "");
         }
-
         setLoading(false);
       } catch (err) {
         console.error("Erreur lors de la récupération des informations:", err);
