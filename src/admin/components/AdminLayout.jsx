@@ -171,7 +171,6 @@ const menuItems = [
       { text: "Plats", path: "/admin/plats" },
     ]
   },
-  // Lien vers la page Commandes (gestion des commandes du restaurant)
   { text: "Commandes", icon: <ReceiptIcon />, path: "/admin/commandes" },
 ];
 

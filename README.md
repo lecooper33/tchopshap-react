@@ -1,70 +1,81 @@
-# Getting Started with Create React App
+# TchopShap React
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+TchopShap est une application web de commande de plats et de gestion de restaurants, développée avec React. Elle permet aux utilisateurs de parcourir des restaurants, de commander des plats, de gérer leur panier, de suivre leurs commandes et d'administrer les données côté back-office.
 
-## Available Scripts
+## Fonctionnalités principales
 
-In the project directory, you can run:
+- Parcours et recherche de restaurants et de plats
+- Ajout de plats au panier et gestion du panier
+- Authentification et gestion de profil utilisateur
+- Suivi des commandes et historique
+- Paiement en ligne et gestion des erreurs de paiement
+- Espace administrateur pour la gestion des restaurants, plats, catégories, livreurs et livraisons
 
-### `npm start`
+## Structure du projet
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+public/           # Fichiers statiques et images
+src/
+  components/     # Composants réutilisables (Header, Footer, Cart, etc.)
+  context/        # Contexts React (authentification, panier)
+  pages/          # Pages principales (Accueil, Profil, Paiement, etc.)
+  admin/          # Espace d'administration (pages et composants)
+  theme/          # Thème et styles globaux
+  App.js          # Point d'entrée principal de l'application
+  index.js        # Point d'entrée ReactDOM
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Installation
 
-### `npm test`
+1. **Cloner le dépôt**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+git clone <url-du-repo>
+cd tchopshap-react
+```
 
-### `npm run build`
+2. **Installer les dépendances**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. **Lancer l'application**
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm start
+```
 
-### `npm run eject`
+L'application sera accessible sur [http://localhost:3000](http://localhost:3000).
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Scripts disponibles
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- `npm start` : Démarre le serveur de développement
+- `npm run build` : Crée une version optimisée pour la production
+- `npm test` : Lance les tests unitaires
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Technologies utilisées
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- React
+- React Router
+- Context API
+- CSS Modules
+- (Ajouter ici toute autre librairie ou technologie utilisée)
 
-## Learn More
+## Contribution
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Les contributions sont les bienvenues !
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Forkez le projet
+2. Créez une branche (`git checkout -b feature/ma-nouvelle-fonctionnalite`)
+3. Commitez vos changements (`git commit -am 'Ajout d'une nouvelle fonctionnalité'`)
+4. Poussez la branche (`git push origin feature/ma-nouvelle-fonctionnalite`)
+5. Ouvrez une Pull Request
 
-### Code Splitting
+## Auteur
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+-Garland brel Projet réalisé dans le cadre de l'école 241
 
-### Analyzing the Bundle Size
+## Licence
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Ce projet est sous licence MIT.
