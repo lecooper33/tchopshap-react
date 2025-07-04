@@ -22,7 +22,7 @@ const CategoryList = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get("https://tchopshap.onrender.com/categorie");
-      setCategories(response.data);
+      setCategories(response.data.data || []); // Correction ici
     } catch (error) {
       console.error("Erreur lors du chargement des catégories :", error);
     } finally {
@@ -125,7 +125,7 @@ const CategoryList = () => {
           {categories.map((category, index) => (
             <Grid
               xs={12}
-              key={category.id || category.categorie || index}
+              key={category.idCategorie || category.categorie || index} // Correction ici
             >
               <Card
                 onClick={() => navigate(`/restaurants?categorie=${encodeURIComponent(category.categorie)}`)}

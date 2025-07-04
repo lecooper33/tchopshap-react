@@ -18,7 +18,7 @@ const RestaurantOnSpot = () => {
     try {
       const response = await fetch("https://tchopshap.onrender.com/restaurant");
       const data = await response.json();
-      setRestaurants(data);
+      setRestaurants(data.data || []); // Correction ici
     } catch (error) {
       console.error("Erreur lors de la récupération des restaurants:", error);
     } finally {
