@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -10,11 +10,40 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import SearchDropdown from './SearchDropdown';
+import { useCart } from '../context/CartContext';
 
 function HeroSection() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+
+  // Images du diaporama
+  const bgImages = [
+    '/Img/bacground-hero.jpg',
+    '/Img/hero-2.avif',
+    '/Img/hero-3.jpg',
+    '/Img/hero-4.jpg',
+    '/Img/Container.png',
+  ];
+  const [bgIndex, setBgIndex] = useState(0);
+  const [zoom, setZoom] = useState(1.2); // commence légèrement zoomé
+
+  useEffect(() => {
+    // Animation de dézoom
+    const zoomInterval = setInterval(() => {
+      setZoom((z) => (z > 1 ? z - 0.002 : 1));
+    }, 16); // ~60fps
+    // Changement d'image toutes les 5s
+    const imgInterval = setInterval(() => {
+      setBgIndex((i) => (i + 1) % bgImages.length);
+      setZoom(1.2); // reset zoom à chaque image
+    }, 5000);
+    return () => {
+      clearInterval(zoomInterval);
+      clearInterval(imgInterval);
+    };
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -24,10 +53,21 @@ function HeroSection() {
     setShowDropdown(!!e.target.value);
   };
 
-  const handleSearchClick = () => {
+  const handleSearchClick = async () => {
     if (searchQuery.trim()) {
       setShowDropdown(false);
-      navigate(`/PlatCard?search=${encodeURIComponent(searchQuery)}`);
+      // Récupérer les plats depuis l'API pour trouver le plat correspondant
+      try {
+        const response = await fetch('https://tchopshap.onrender.com/plat');
+        const plats = await response.json();
+        const plat = plats.find((p) => p.nom.toLowerCase() === searchQuery.trim().toLowerCase());
+        if (plat) {
+          addToCart({ plat, quantite: 1 });
+        }
+      } catch (e) {
+        // ignore erreur, on redirige quand même
+      }
+      navigate('/Cart');
     }
   };
 
@@ -36,17 +76,50 @@ function HeroSection() {
       sx={{
         position: 'relative',
         width: '100%',
-        backgroundColor: '#F97316',
-        color: 'white',
         minHeight: { xs: '40vh', sm: 500 },
         display: 'flex',
         alignItems: 'center',
         py: { xs: 6, sm: 0 },
         overflow: 'hidden',
+        color: 'white',
       }}
     >
+      {/* Background animé */}
       <Box
         sx={{
+          position: 'absolute',
+          zIndex: 0,
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: `url(${bgImages[bgIndex]})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          transition: 'background-image 1s ease',
+          transform: `scale(${zoom})`,
+          transitionProperty: 'background-image, transform',
+          transitionDuration: '1s, 5s',
+          willChange: 'transform',
+        }}
+      />
+      {/* Overlay orange */}
+      <Box
+        sx={{
+          position: 'absolute',
+          zIndex: 1,
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(rgba(249,115,22,0.45), rgba(249,115,22,0.45))',
+        }}
+      />
+      {/* Contenu principal */}
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 2,
           px: { xs: 2, sm: 6 },
           width: '100%',
           mx: 'auto',
@@ -81,7 +154,6 @@ function HeroSection() {
         >
           TchôpShap vous livre les meilleurs restaurants directement chez vous.
         </Typography>
-
         {/* Zone de recherche */}
         <Box
           sx={{
@@ -103,7 +175,7 @@ function HeroSection() {
               sx={{
                 bgcolor: 'white',
                 borderRadius: { xs: 2, sm: '4px 0 0 4px' },
-                flexGrow: 1,
+                flexGrow: 1, outline: 'none',
               }}
               aria-label="Recherche plat ou restaurant"
               onKeyDown={(e) => {
@@ -134,7 +206,6 @@ function HeroSection() {
           </Button>
         </Box>
       </Box>
-
       {/* Vague en bas */}
       <Box
         component="img"
@@ -146,6 +217,7 @@ function HeroSection() {
           position: 'absolute',
           bottom: 0,
           left: 0,
+          zIndex: 1,
         }}
       />
     </Box>
