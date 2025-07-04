@@ -5,7 +5,8 @@ import {
   AppBar, Box, CssBaseline, Drawer, IconButton, List, ListItem,
   ListItemIcon, ListItemText, Toolbar, Typography, Avatar, Divider, 
   Tooltip, Button, Menu, MenuItem, Badge, TextField, Switch,
-  ListItemButton, Collapse, useTheme, InputAdornment, alpha
+  ListItemButton, Collapse, useTheme, InputAdornment, alpha,
+  Dialog, DialogTitle, DialogContent, DialogActions
 } from "@mui/material";
 import {
   Menu as MenuIcon, Dashboard as DashboardIcon,
@@ -189,6 +190,14 @@ const AdminLayout = ({ children }) => {
   const [adminImage, setAdminImage] = useState(() => localStorage.getItem("adminImage") || null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    nom: adminName || "",
+    email: "",
+    password: "",
+    image: null,
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Gestion des notifications
   useEffect(() => {
@@ -423,6 +432,58 @@ const AdminLayout = ({ children }) => {
     </Box>
   ), [collapsed, darkMode, location, searchQuery, theme.palette, toggleTheme]);
 
+  const handleOpenProfileModal = () => setProfileModalOpen(true);
+  const handleCloseProfileModal = () => setProfileModalOpen(false);
+
+  const handleProfileInputChange = (e) => {
+    const { name, value, files } = e.target;
+    setProfileForm((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
+  };
+
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    try {
+      const userId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      if (profileForm.nom) formData.append("nom", profileForm.nom);
+      if (profileForm.email) formData.append("email", profileForm.email);
+      if (profileForm.password) formData.append("password", profileForm.password);
+      if (profileForm.image) formData.append("image", profileForm.image);
+      await axios.put(
+        `https://tchopshap.onrender.com/utilisateurs/${userId}`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (profileForm.nom) {
+        setAdminName(profileForm.nom);
+        localStorage.setItem("adminName", profileForm.nom);
+      }
+      if (profileForm.image) {
+        const imgUrl = URL.createObjectURL(profileForm.image);
+        setAdminImage(imgUrl);
+        localStorage.setItem("adminImage", imgUrl);
+      }
+      if (profileForm.password) {
+        toast.success("Mot de passe modifié. Vous allez être redirigé pour vérification OTP.");
+        setTimeout(() => {
+          navigate("/otp");
+        }, 2000);
+      } else {
+        toast.success("Profil mis à jour !");
+        setProfileModalOpen(false);
+      }
+    } catch (err) {
+      toast.error("Erreur lors de la mise à jour du profil");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ 
       display: "flex", 
@@ -585,7 +646,7 @@ const AdminLayout = ({ children }) => {
               }}
             >
               <MenuItem
-                onClick={handleClose}
+                onClick={handleOpenProfileModal}
                 sx={{
                   py: 1,
                   px: 2,
@@ -785,6 +846,56 @@ const AdminLayout = ({ children }) => {
           {children}
         </Box>
       </Box>
+
+      <Dialog open={profileModalOpen} onClose={handleCloseProfileModal} maxWidth="xs" fullWidth>
+        <DialogTitle>Modifier mon profil</DialogTitle>
+        <form onSubmit={handleProfileSubmit}>
+          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <TextField
+              label="Nom"
+              name="nom"
+              value={profileForm.nom}
+              onChange={handleProfileInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              value={profileForm.email}
+              onChange={handleProfileInputChange}
+              fullWidth
+            />
+            <TextField
+              label="Nouveau mot de passe"
+              name="password"
+              type="password"
+              value={profileForm.password}
+              onChange={handleProfileInputChange}
+              fullWidth
+            />
+            <Button variant="outlined" component="label">
+              Changer la photo de profil
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                hidden
+                onChange={handleProfileInputChange}
+              />
+            </Button>
+            {profileForm.image && (
+              <Typography variant="caption">{profileForm.image.name}</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseProfileModal}>Annuler</Button>
+            <Button type="submit" variant="contained" color="primary" disabled={profileLoading}>
+              {profileLoading ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </Box>
   );
 };
