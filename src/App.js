@@ -22,9 +22,9 @@ import Admin from "./admin/pages/Admin.jsx";
 import Dashboard from "./admin/pages/Dashboard.jsx";
 import Plats from "./admin/pages/Plats.jsx";
 import LoginAdmin from "./admin/pages/Login.jsx";
-import Client from "./admin/pages/Clients.jsx";
 import Restaurants from "./admin/pages/Restaurants.jsx"
 import User from "./admin/pages/User.jsx";
+import Commandes from "./admin/pages/Commandes.jsx";
 // pour la protection des routes admin
 import PrivateRoutes from "./admin/components/PrivateRoutes.jsx";
 
@@ -71,8 +71,8 @@ const AppContent = () => {
         <Route path="/admin/dashboard" element={<PrivateRoutes><Dashboard /></PrivateRoutes>} />
         <Route path="/admin/plats" element={<PrivateRoutes><Plats /></PrivateRoutes>} />
         <Route path="/admin/restaurants" element={<PrivateRoutes><Restaurants /></PrivateRoutes>} />
-        <Route path="/admin/client" element={<PrivateRoutes><Client /></PrivateRoutes>} />
         <Route path="/admin/user" element={<PrivateRoutes><User /></PrivateRoutes>} />
+        <Route path="/admin/commandes" element={<PrivateRoutes><Commandes /></PrivateRoutes>} />
       </Routes>
     </>
   );

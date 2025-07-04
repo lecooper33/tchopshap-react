@@ -171,7 +171,7 @@ const menuItems = [
       { text: "Plats", path: "/admin/plats" },
     ]
   },
-  { text: "Clients", icon: <PeopleIcon />, path: "/admin/client" },
+  // Lien vers la page Commandes (gestion des commandes du restaurant)
   { text: "Commandes", icon: <ReceiptIcon />, path: "/admin/commandes" },
 ];
 
@@ -658,19 +658,7 @@ const AdminLayout = ({ children }) => {
                 </ListItemIcon>
                 Mon Profil
               </MenuItem>
-              <MenuItem
-                onClick={handleClose}
-                sx={{
-                  py: 1,
-                  px: 2,
-                  "&:hover": { bgcolor: "rgba(255,167,38,0.08)" },
-                }}
-              >
-                <ListItemIcon>
-                  <SettingsIcon fontSize="small" sx={{ color: "text.secondary" }} />
-                </ListItemIcon>
-                Paramètres
-              </MenuItem>
+
               <Divider />
               <MenuItem
                 onClick={handleLogout}
