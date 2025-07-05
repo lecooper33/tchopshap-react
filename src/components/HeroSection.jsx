@@ -177,6 +177,7 @@ function HeroSection() {
                 bgcolor: 'white',
                 borderRadius: { xs: 2, sm: '4px 0 0 4px' },
                 flexGrow: 1, outline: 'none',
+                
               }}
               aria-label="Recherche plat ou restaurant"
               onKeyDown={(e) => {

@@ -40,10 +40,11 @@ export default function SearchDropdown({ query, onClose }) {
         axios.get("https://tchopshap.onrender.com/restaurant"),
       ])
         .then(([platsRes, restosRes]) => {
-          const platsFiltres = platsRes.data.filter((p) =>
+          // Correction : accès à .data.data
+          const platsFiltres = (platsRes.data.data || []).filter((p) =>
             p.nom.toLowerCase().includes(query.toLowerCase())
           ).slice(0, 20);
-          const restosFiltres = restosRes.data.filter((r) =>
+          const restosFiltres = (restosRes.data.data || []).filter((r) =>
             r.nom.toLowerCase().includes(query.toLowerCase())
           ).slice(0, 20);
           setPlats(platsFiltres);
@@ -69,9 +70,9 @@ export default function SearchDropdown({ query, onClose }) {
       aria-live="polite"
       sx={{ 
         position: 'absolute', 
-        zIndex: 3, 
+        zIndex: 10, 
         width: '100%', 
-        mt: 1, 
+        mb: 1, 
         maxHeight: 400, 
         overflowY: 'auto', 
         p: 0, 
