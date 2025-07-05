@@ -108,14 +108,17 @@ export default function Dashboard() {
       }
     });
 
-    const totalAmount = commands.reduce((sum, cmd) => sum + (cmd.montant || 0), 0);
-    const todayAmount = todayCommands.reduce((sum, cmd) => sum + (cmd.montant || 0), 0);
+    // Exclure les commandes annulées du chiffre d'affaires
+    const commandesValides = commands.filter(cmd => cmd.statut !== "annulée");
+    const todayCommandesValides = todayCommands.filter(cmd => cmd.statut !== "annulée");
+    const totalAmount = commandesValides.reduce((sum, cmd) => sum + parseFloat(cmd.total || 0), 0);
+    const todayAmount = todayCommandesValides.reduce((sum, cmd) => sum + parseFloat(cmd.total || 0), 0);
 
     return {
-      todayCommands: todayCommands.length,
+      todayCommands: todayCommandesValides.length,
       todayAmount,
       totalAmount,
-      avgOrderValue: commands.length ? totalAmount / commands.length : 0
+      avgOrderValue: commandesValides.length ? totalAmount / commandesValides.length : 0
     };
   }, []);
 

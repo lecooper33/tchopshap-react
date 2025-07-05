@@ -38,16 +38,15 @@ function Profil() {
         email,
         password,
       });
-
+      console.log("Connexion: Réponse de l'API /connexion:", response.data);
       const data = response.data;
 
       // Récupérer les détails de l'utilisateur avec son l'ID
-      const userResponse = await axios.get(`https://tchopshap.onrender.com/utilisateurs`);
-      const users = userResponse.data;
+      const userResponse = await axios.get(`https://tchopshap.onrender.com/utilisateurs/${data.userId}`);
+      const user = userResponse.data.data;
+      console.log('Détail utilisateur récupéré:', user);
 
-      const user = users.find(u => u.idUtilisateur === data.userId);
-
-      if (user) {
+      if (user && user.nom && user.email) {
         const userData = {
           token: data.token,
           userId: data.userId,
@@ -62,13 +61,15 @@ function Profil() {
         const redirectPath = location.state?.from || (userData.role === "administrateur" ? "/admin" : "/")
         navigate(redirectPath);
       } else {
-        throw new Error("Utilisateur non trouvé.");
+        throw new Error("Impossible de récupérer le nom ou l'email de l'utilisateur.");
       }
 
     } catch (err) {
       setError(true);
       setMessage(err.response?.data?.message || 'Problème de connexion au serveur.');
     }
+    console.log("Connexion: Erreur lors de la connexion:");
+    
   };
 
   return (

@@ -165,8 +165,8 @@ const Header = () => {
             isDesktop ? (
               <Box display="flex" alignItems="center" gap={2}>
                 <Chip
-                  avatar={<Avatar sx={{ bgcolor: "primary.main" }}>{user.nom.charAt(0).toUpperCase()}</Avatar>}
-                  label={`Bonjour, ${user.nom.split(' ')[0]}`}
+                  avatar={<Avatar sx={{ bgcolor: "primary.main" }}>{user.nom ? user.nom.charAt(0).toUpperCase() : '?'}</Avatar>}
+                  label={`Bonjour, ${user.nom ? user.nom.split(' ')[0] : ''}`}
                   variant="outlined"
                   onClick={() => navigate("/user")}
                   sx={{
@@ -249,10 +249,10 @@ const Header = () => {
         {user && (
           <Box sx={{ mb: 2, p: 2, bgcolor: "action.hover", borderRadius: 2 ,}}>
             <Box display="flex" alignItems="center" gap={2}>
-              <Avatar sx={{ bgcolor: "primary.main" }}>{user.nom.charAt(0).toUpperCase()}</Avatar>
+              <Avatar sx={{ bgcolor: "primary.main" }}>{user.nom ? user.nom.charAt(0).toUpperCase() : '?'}</Avatar>
               <Box>
-                <Typography fontWeight={600}>{user.nom}</Typography>
-                <Typography fontSize={13} color="text.secondary">{user.email}</Typography>
+                <Typography fontWeight={600}>{user.nom || ''}</Typography>
+                <Typography fontSize={13} color="text.secondary">{user.email || ''}</Typography>
               </Box>
             </Box>
           </Box>

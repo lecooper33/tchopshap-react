@@ -11,6 +11,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import SearchDropdown from './SearchDropdown';
 import { useCart } from '../context/CartContext';
+import axios from 'axios';
 
 function HeroSection() {
   const theme = useTheme();
@@ -58,8 +59,8 @@ function HeroSection() {
       setShowDropdown(false);
       // Récupérer les plats depuis l'API pour trouver le plat correspondant
       try {
-        const response = await fetch('https://tchopshap.onrender.com/plat');
-        const plats = await response.json();
+        const response = await axios.get('https://tchopshap.onrender.com/plat');
+        const plats = response.data.data || [];
         const plat = plats.find((p) => p.nom.toLowerCase() === searchQuery.trim().toLowerCase());
         if (plat) {
           addToCart({ plat, quantite: 1 });
